@@ -45,23 +45,14 @@ tmp/
 *.backup
 *~
 
-# Keep directory structure but ignore content in working directories
-# Allow .gitkeep files to preserve empty directories
+# Topic idea scratch files stay local (keep the dir structure only).
 topics/*
 !topics/.gitkeep
 !topics/example-topic-idea.md
 
-research/*
-!research/.gitkeep
-
-drafts/*
-!drafts/.gitkeep
-
-published/*
-!published/.gitkeep
-
-rewrites/*
-!rewrites/.gitkeep
+# Content directories ARE committed so articles, briefs, and final posts have a
+# cloud home and backup until a CMS (Sanity) becomes the source of truth.
+# research/, drafts/, published/, and rewrites/ are tracked intentionally.
 
 # Don't ignore context files - these should be committed after customization
 # !context/
