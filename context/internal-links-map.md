@@ -1,224 +1,111 @@
-# Internal Links Map
+# Clickity Internal Links Map
 
-<!-- INSTRUCTIONS: This document catalogs key pages on your website that should be referenced
-     in blog content for strategic internal linking.
+This document catalogs key Clickity pages to reference in blog content for strategic internal linking. Use it as the go-to reference when adding internal links to articles. See `product-context.md` for positioning; Clickity is an AI-native social media management platform (a SEAN), tagline "Turn content into revenue."
 
-     Fill in all sections with your actual URLs and linking guidelines.
-     This helps Claude create relevant internal links while writing content.
+> **[CONFIRM]** Clickity is at the waitlist/launch stage, so most deep pages (blog, service, vertical, comparison) **do not exist yet**. URLs marked _planned_ are the recommended structure to build, then link to. Update this file as real pages ship. Do not link to a page until it is live.
 
-     Delete these instruction comments when done.
-     See examples/castos/internal-links-map.md for a complete real-world example. -->
-
-This document catalogs key [YOUR COMPANY] pages that should be referenced in blog content for strategic internal linking. Use this as your go-to reference when adding internal links to articles.
-
-## Instructions
-
-Fill in URLs and descriptions for all important pages on your website. Update as new content is created or pages are updated.
-
-For each page, include:
-- **URL**: The full URL to the page
-- **When to Link**: Context or topics where this link is relevant
-- **Anchor Text Examples**: Natural phrases to use when linking
+For each page: **URL**, **When to Link**, **Anchor Text Examples**. Anchor text must obey the style guide (no "AI slop," no em dashes, American English) and the messaging rules in `product-context.md` (no competitor names except in deliberate comparison content).
 
 ---
 
 ## Homepage & Core Pages
 
 ### Homepage
-- **URL**: https://[yoursite.com]
-- **When to Link**: [e.g., "Rarely; only when referencing your company broadly"]
-- **Anchor Text Examples**: "[your company name]", "our platform", "[your product]"
+- **URL**: https://useclickity.com
+- **When to Link**: Sparingly; when referencing Clickity broadly or as a top-of-funnel CTA
+- **Anchor Text Examples**: "Clickity", "AI social media management", "turn content into revenue"
 
-### About Page
-- **URL**: https://[yoursite.com/about]
-- **When to Link**: [e.g., "When discussing company mission, values, or team"]
-- **Anchor Text Examples**: "about [company]", "our mission", "our story"
+### Product / How It Works (on-page sections)
+- **URL**: https://useclickity.com/#product  •  https://useclickity.com/#how-it-works
+- **When to Link**: When explaining the model (AI agents handle execution, human Brand Managers ensure outcomes) or the onboarding-to-first-posts journey
+- **Anchor Text Examples**: "how Clickity works", "AI agents plus human Brand Managers", "from signup to first posts in 2 to 3 days"
 
-### Contact Page
-- **URL**: https://[yoursite.com/contact]
-- **When to Link**: [e.g., "When inviting readers to reach out"]
-- **Anchor Text Examples**: "contact us", "get in touch", "reach out"
+### Pricing
+- **URL**: https://useclickity.com/#pricing  _(planned: /pricing)_
+- **When to Link**: When discussing cost, agency-vs-DIY budgets, or ROI
+- **Anchor Text Examples**: "Clickity pricing", "plans starting from $99/mo", "what it costs"
 
-### Pricing Page
-- **URL**: https://[yoursite.com/pricing]
-- **When to Link**: [e.g., "When discussing costs, plans, or pricing"]
-- **Anchor Text Examples**: "[product] pricing", "pricing plans", "see pricing"
+### Free Brand Strategy Tool _(primary GTM asset, §8)_
+- **URL**: _planned — NOT LIVE YET (confirmed 2026-06-22)._ The free brand strategy tool has not shipped. **Do not link to it or use it as a CTA target until it is live.** When it launches, drop the final URL/slug here and switch the TOFU CTAs on.
+- **When to Link**: This is the single most valuable internal link target. End most informational/TOFU articles with it as the soft CTA. Link whenever an article discusses brand strategy, social strategy, or "where do I start."
+- **Anchor Text Examples**: "free brand strategy tool", "get your free brand strategy", "see what AI finds about your brand"
 
----
-
-## Product/Service Pages
-
-<!-- INSTRUCTIONS: Add your main product or service pages -->
-
-### [Product/Service Name 1]
-- **URL**: https://[yoursite.com/product-1]
-- **When to Link**: [Topics/contexts where this is relevant]
-- **Anchor Text Examples**: "[descriptive phrase]", "[benefit-focused phrase]", "[feature name]"
-
-### [Product/Service Name 2]
-- **URL**: https://[yoursite.com/product-2]
-- **When to Link**: [Topics/contexts where this is relevant]
-- **Anchor Text Examples**: "[descriptive phrase]", "[benefit-focused phrase]", "[feature name]"
-
-### [Product/Service Name 3]
-- **URL**: https://[yoursite.com/product-3]
-- **When to Link**: [Topics/contexts where this is relevant]
-- **Anchor Text Examples**: "[descriptive phrase]", "[benefit-focused phrase]", "[feature name]"
+### Waitlist / Sign Up
+- **URL**: https://useclickity.com (Join Waitlist)  •  Sign in: https://useclickity.com/app/sign-in
+- **When to Link**: Primary conversion CTA at the end of BOFU/commercial articles
+- **Anchor Text Examples**: "join the waitlist", "get early access", "start with Clickity"
+- > **[CONFIRM: exact waitlist/CTA URL and final wording]**
 
 ---
 
-## Feature Pages
+## Service Pages _(planned - build as pillar destinations for the clusters in target-keywords.md)_
 
-<!-- INSTRUCTIONS: Add pages for specific features or capabilities -->
+- **Social media management service** - _planned: /social-media-management-service_ - pillar for the core BOFU cluster.
+- **AI social media agency / SEAN explainer** - _planned: /ai-social-media-agency_ - pillar for the category/positioning cluster.
+- **Done-for-you social media** - _planned: /done-for-you-social-media_ - link from "I want it handled" content.
+- **Paid social / Meta Boosts** - _planned: /paid-social_ - link from ROI and paid-amplification posts.
+- **White-label / for agencies** - _planned: /white-label_ - link from agency/reseller-audience content.
 
-### [Feature Name 1]
-- **URL**: https://[yoursite.com/feature-1]
-- **When to Link**: In articles about [relevant topics]
-- **Anchor Text Examples**: "[feature name]", "[what it does]", "[benefit phrase]"
-
-### [Feature Name 2]
-- **URL**: https://[yoursite.com/feature-2]
-- **When to Link**: In articles about [relevant topics]
-- **Anchor Text Examples**: "[feature name]", "[what it does]", "[benefit phrase]"
-
-### [Feature Name 3]
-- **URL**: https://[yoursite.com/feature-3]
-- **When to Link**: In articles about [relevant topics]
-- **Anchor Text Examples**: "[feature name]", "[what it does]", "[benefit phrase]"
+> **[CONFIRM]** final URL slugs once these pages are built. Until then, link cluster posts to the relevant homepage section.
 
 ---
 
-## Use Case / Solution Pages
+## Vertical Pages _(planned - the biggest SEO moat; one pillar per target vertical)_
 
-<!-- INSTRUCTIONS: Add pages for specific use cases, industries, or customer segments -->
+Build a page per vertical and link every vertical-cluster post up to it:
 
-### [Use Case 1]
-- **URL**: https://[yoursite.com/use-case-1]
-- **When to Link**: In articles targeting [audience segment] or discussing [problem/solution]
-- **Anchor Text Examples**: "[use case description]", "[for whom]", "[solution phrase]"
-
-### [Use Case 2]
-- **URL**: https://[yoursite.com/use-case-2]
-- **When to Link**: In articles targeting [audience segment] or discussing [problem/solution]
-- **Anchor Text Examples**: "[use case description]", "[for whom]", "[solution phrase]"
+- _planned:_ /social-media-for-hvac, /social-media-for-real-estate-agents, /social-media-for-ecommerce, /social-media-for-local-retail, /social-media-for-restaurants
+- **When to Link**: From every post in that vertical's cluster, and from broader posts when the vertical is mentioned
+- **Anchor Text Examples**: "social media for HVAC businesses", "social media management for real estate agents", "done-for-you social media for e-commerce brands"
 
 ---
 
-## Resource Pages
+## Comparison / Decision Pages _(planned - high BOFU value, handle with care)_
 
-<!-- INSTRUCTIONS: Add links to guides, tools, templates, or other resources -->
+Decision content Clickity can win. Per `product-context.md`, only name competitors inside deliberate comparison content.
 
-### [Resource Name 1]
-- **URL**: https://[yoursite.com/resources/resource-1]
-- **When to Link**: [When this resource would help the reader]
-- **Anchor Text Examples**: "[resource name]", "[what it provides]", "free [resource type]"
-
-### [Resource Name 2]
-- **URL**: https://[yoursite.com/resources/resource-2]
-- **When to Link**: [When this resource would help the reader]
-- **Anchor Text Examples**: "[resource name]", "[what it provides]", "free [resource type]"
+- _planned:_ /agency-vs-diy-social-media, /hire-social-media-manager-vs-ai, /ai-social-media-tool-vs-agency
+- **When to Link**: From posts weighing how a business should handle social
+- **Anchor Text Examples**: "agency vs DIY for social media", "should you hire a social media manager or use AI", "the case for a software-enabled agency"
 
 ---
 
 ## Top-Performing Blog Posts
 
-<!-- INSTRUCTIONS: Add your 10-20 best blog posts that get good traffic and conversions.
-     These are "pillar content" you want to link to frequently. -->
-
-### [Blog Post Title 1]
-- **URL**: https://[yoursite.com/blog/post-1]
-- **Primary Topic**: [Main topic/keyword]
-- **When to Link**: In articles about [related topics]
-- **Anchor Text Examples**: "[topic phrase]", "[how-to phrase]", "[question phrase]"
-
-### [Blog Post Title 2]
-- **URL**: https://[yoursite.com/blog/post-2]
-- **Primary Topic**: [Main topic/keyword]
-- **When to Link**: In articles about [related topics]
-- **Anchor Text Examples**: "[topic phrase]", "[how-to phrase]", "[question phrase]"
-
-### [Blog Post Title 3]
-- **URL**: https://[yoursite.com/blog/post-3]
-- **Primary Topic**: [Main topic/keyword]
-- **When to Link**: In articles about [related topics]
-- **Anchor Text Examples**: "[topic phrase]", "[how-to phrase]", "[question phrase]"
-
-### [Blog Post Title 4]
-- **URL**: https://[yoursite.com/blog/post-4]
-- **Primary Topic**: [Main topic/keyword]
-- **When to Link**: In articles about [related topics]
-- **Anchor Text Examples**: "[topic phrase]", "[how-to phrase]", "[question phrase]"
-
-### [Blog Post Title 5]
-- **URL**: https://[yoursite.com/blog/post-5]
-- **Primary Topic**: [Main topic/keyword]
-- **When to Link**: In articles about [related topics]
-- **Anchor Text Examples**: "[topic phrase]", "[how-to phrase]", "[question phrase]"
-
-<!-- Add 5-15 more of your top blog posts following the same format -->
-
----
-
-## Comparison Pages
-
-<!-- INSTRUCTIONS: If you have comparison or "vs" pages, add them here -->
-
-### [Your Product] vs [Competitor 1]
-- **URL**: https://[yoursite.com/vs/competitor-1]
-- **When to Link**: When mentioning [competitor] or discussing alternatives
-- **Anchor Text Examples**: "[your product] vs [competitor]", "comparison with [competitor]"
-
-### [Your Product] vs [Competitor 2]
-- **URL**: https://[yoursite.com/vs/competitor-2]
-- **When to Link**: When mentioning [competitor] or discussing alternatives
-- **Anchor Text Examples**: "[your product] vs [competitor]", "comparison with [competitor]"
-
----
-
-## Landing Pages
-
-<!-- INSTRUCTIONS: Add any campaign-specific or conversion-optimized landing pages -->
-
-### [Campaign/Offer Name]
-- **URL**: https://[yoursite.com/landing/offer-1]
-- **When to Link**: [Specific contexts for this offer]
-- **Anchor Text Examples**: "[offer description]", "[call to action]", "[benefit phrase]"
+> **[CONFIRM]** No blog posts published yet. As articles go live, add the 10-20 best performers here as pillar/link targets:
+>
+> ```
+> ### [Post Title]
+> - URL: https://useclickity.com/blog/[slug]
+> - Primary Topic: [keyword]
+> - When to Link: In articles about [related topics]
+> - Anchor Text Examples: "[varied natural phrases]"
+> ```
 
 ---
 
 ## Internal Linking Best Practices
 
-When adding internal links to blog content:
-
-1. **Link Naturally**: Only link when genuinely relevant and helpful to the reader
-2. **Vary Anchor Text**: Use different phrases for the same destination URL
-3. **3-5 Links Per Post**: Aim for 3-5 strategic internal links in each blog post
-4. **Deep Linking**: Link to specific relevant pages, not just the homepage
-5. **Early Links Matter**: Links in the first few paragraphs carry more weight
-6. **Update This Map**: Add new pages as you create them, remove outdated URLs
-
----
-
-## Quick Reference by Topic
-
-<!-- INSTRUCTIONS: Create a quick topic-to-URL mapping for common themes you write about.
-     This helps Claude quickly find relevant links while writing. -->
-
-**When writing about [Topic 1]**, link to:
-- [URL 1] - [Brief description]
-- [URL 2] - [Brief description]
-- [URL 3] - [Brief description]
-
-**When writing about [Topic 2]**, link to:
-- [URL 1] - [Brief description]
-- [URL 2] - [Brief description]
-- [URL 3] - [Brief description]
-
-**When writing about [Topic 3]**, link to:
-- [URL 1] - [Brief description]
-- [URL 2] - [Brief description]
-- [URL 3] - [Brief description]
+1. **Link Naturally** - only when genuinely helpful to the reader.
+2. **Vary Anchor Text** - different phrases for the same URL; never the same anchor twice.
+3. **3-5 Links Per Post** - strategic, not stuffed.
+4. **Deep Linking** - link to specific service/vertical/pillar pages, not just the homepage.
+5. **Early Links Matter** - links in the first few paragraphs carry more weight.
+6. **Cluster Discipline** - every cluster post links up to its pillar page and sideways to 1-2 sibling posts.
+7. **Free tool as the default CTA** - most informational posts should route to the free brand strategy tool.
+8. **Keep This Map Updated** - add pages as they ship; remove dead URLs; never link to an unbuilt page.
 
 ---
 
-*Note: Keep this document updated as you publish new content or restructure your site. Accurate internal linking improves SEO and user experience.*
+## Quick Reference by Topic (aligned to target-keywords.md clusters)
+
+**Social media management service (core BOFU)** → service pillar, pricing, free brand strategy tool, waitlist.
+**ROI / "content into revenue"** → how-it-works section, paid-social page, relevant case studies (once they exist).
+**Vertical (HVAC / real estate / e-commerce / retail / restaurants)** → that vertical's pillar page, plus the free tool.
+**Agency vs DIY vs AI decision** → the matching comparison/decision page, service pillar, pricing.
+**Platform-specific (IG / LinkedIn / TikTok / etc.)** → service pillar, the relevant vertical page, free tool.
+**White-label / for agencies** → white-label page, how-it-works.
+
+---
+
+*Keep this document updated as pages and posts ship. Accurate internal linking is one of the fastest wins for a new site building topical authority.*

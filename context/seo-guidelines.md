@@ -1,6 +1,31 @@
-# SEO Guidelines for Castos Content
+# SEO Guidelines for Clickity Content
 
-This document outlines SEO best practices and requirements for all Castos blog content to maximize organic search visibility and rankings.
+This document outlines SEO best practices and requirements for all Clickity blog content to maximize organic search visibility and rankings.
+
+Clickity (useclickity.com) is an **AI-native social media management platform**, a Software Enabled Agency (SEAN) that pairs AI agents with human **Brand Managers** to deliver measurable business outcomes, not just content. The tagline is **"Turn content into revenue."** Our audience is US small and mid-sized businesses, with a focus on verticals like HVAC and local service businesses, real estate, local retail, and e-commerce. Our content covers social media management, AI-powered marketing, and outcome-driven social strategy for these audiences.
+
+> **Guardrail.** All published content must obey `context/product-context.md` §10 (no "AI slop" phrasing, no em dashes, no naming competitors except in deliberate comparison content) and §11 (never the Smarcomms transition story, headcount, or internal financials). When in doubt, that file wins.
+
+**Important new-site reality:** Clickity is a brand-new site (currently at waitlist stage), so our domain authority is low and we have no ranking history to build on. Every guideline below is calibrated to a site that must **build topical authority from scratch**, earning trust through tightly clustered, genuinely useful content rather than competing head-on for high-volume terms we cannot yet win. Read the "New-Site SEO Strategy" section first; it shapes how every other rule should be applied.
+
+## New-Site SEO Strategy (Read First)
+
+Because Clickity has low domain authority and no ranking track record, our SEO approach for the first 6-12 months is fundamentally different from an established site. Prioritize winnable battles that compound into authority.
+
+### Prioritization Rules
+1. **Target long-tail, low-difficulty, high-INTENT keywords first.** Go after specific multi-word queries with clear buyer or service intent (e.g., "social media management for HVAC companies," "how realtors can stay consistent on Instagram") rather than broad head terms (e.g., "social media management tool"). These have lower competition, clearer intent, and are achievable for a new domain.
+2. **Build vertical pillar clusters, not generic tool clusters.** Our winnable, on-strategy clusters are the **verticals** (social media for HVAC / local service businesses, social media for real estate agents, social media for e-commerce brands, social media for local retail) and **service / agency-intent** terms (e.g., "done-for-you social media," "managed social media service," "social media agency vs in-house"). These match our actual audience and buyer intent.
+3. **Avoid generic tool head terms owned by the DIY-software incumbents.** Do NOT chase terms like "social media scheduler" or "best social media management tool" that Buffer, Hootsuite, Sprout Social, etc. dominate. That is DIY-tool intent (the wrong audience for a managed, outcome-focused platform) and an unwinnable DR fight for a new domain. Earn the right to compete adjacent to them later by building vertical and service cluster authority first.
+4. **Build topic clusters around pillar pages.** For each priority vertical or service theme, plan one comprehensive pillar page plus 6-12 supporting articles that link up to it. Cluster depth signals topical authority faster than scattered one-off posts.
+5. **Lead with informational intent, then layer commercial intent.** Start with helpful "how-to," "what-is," and "best-way-to" content that earns links and trust. Introduce comparison and bottom-of-funnel pages (including service and vertical landing pages) once the cluster has traction.
+6. **Earn links deliberately.** A new site needs backlinks to compete. Favour link-worthy formats: original frameworks, data/benchmarks (gather our own where possible), templates, and definitive guides. Pair publishing with the `/repurpose` workflow to seed citation surfaces.
+
+> **[CONFIRM: priority pillar topics and their target seed keywords]**: confirm the initial 3-5 vertical/service pillar topics and the long-tail seed keyword list with the Clickity team before producing the first cluster.
+
+### Success Looks Like (early stage)
+- Ranking on page 1 for low-competition long-tail queries within the first cluster.
+- Internal links consistently pointing supporting articles back to their pillar.
+- A growing handful of referring domains earned through genuinely useful, link-worthy content.
 
 ## Content Length Requirements
 
@@ -13,37 +38,38 @@ This document outlines SEO best practices and requirements for all Castos blog c
 ### Important Length Guidelines
 - **Maximum for most articles**: 3,000 words
 - **Maximum for pillar content**: 5,000 words
-- If a topic requires more than the maximum, break it into a series of related articles
-- Aim for the lower end of ranges when possible—concise, focused content often performs better
+- If a topic requires more than the maximum, break it into a series of related articles (which also feeds the cluster strategy)
+- Aim for the lower end of ranges when possible. Concise, focused content often performs better
+- As a new site, depth on a tightly scoped long-tail topic beats breadth on a broad one
 
 ### Why Length Matters
-- Longer content typically ranks higher in search results
-- More words = more opportunities for keyword integration and topic coverage
-- Comprehensive content earns more backlinks and engagement
-- Depth signals expertise and authority to search engines
+- Comprehensive content earns more backlinks and engagement, both critical for a low-authority site
+- More words = more opportunities for natural keyword and related-term coverage
+- Depth signals expertise and authority to search engines, which we must build from zero
+- Pillar pages need enough depth to credibly anchor a cluster
 
 ### Quality Over Quantity
 - Don't add fluff just to hit word counts
-- Every section should provide genuine value
+- Every section should provide genuine value to founders, marketers, and SMB owners
 - Better to have 2,000 valuable words than 3,000 padded words
-- **Stay within the maximum word counts**—overly long articles hurt user experience
+- **Stay within the maximum word counts.** Overly long articles hurt user experience
 
 ## Keyword Optimization
 
 ### Keyword Research Requirements
 Before writing any article:
-1. Identify primary target keyword
-2. Research search volume and difficulty
-3. Analyze top 10 ranking competitors
+1. Identify primary target keyword (favour long-tail, low-difficulty terms for now)
+2. Research search volume AND keyword difficulty, and skip terms a new domain realistically can't rank for yet
+3. Analyze the top 10 ranking competitors and identify gaps we can credibly fill
 4. Identify 3-5 secondary/related keywords
-5. List LSI (Latent Semantic Indexing) keywords
+5. List related/semantic terms that reinforce the cluster topic
 
 ### Keyword Density Guidelines
 - **Primary Keyword**: 1-2% density
-  - Example: In a 2,000-word article, use keyword 20-40 times
-  - Natural integration is critical—never force keywords
+  - Example: In a 2,000-word article, use the keyword 20-40 times
+  - Natural integration is critical: never force keywords
 - **Secondary Keywords**: 0.5-1% density each
-- **LSI Keywords**: Sprinkle throughout naturally
+- **Semantic/related keywords**: Sprinkle throughout naturally to build topical depth
 
 ### Critical Keyword Placement
 Primary keyword MUST appear in:
@@ -57,17 +83,17 @@ Primary keyword MUST appear in:
 
 ### Keyword Integration Best Practices
 - **Natural language first**: Write for humans, optimize for search engines
-- **Use variations**: Don't repeat exact phrase robotically
-  - Example: "podcast hosting" → "hosting your podcast" → "podcast host"
+- **Use variations**: Don't repeat the exact phrase robotically
+  - Example: "social media management service" → "done-for-you social media" → "managed social media"
 - **Question formats**: Include conversational variations
-  - "How to start a podcast" vs "starting a podcast"
+  - "How to manage social media for a small business" vs "social media management for SMBs"
 - **Semantic keywords**: Use related terms to support topical authority
-  - For "podcast editing": include "audio editing", "post-production", "editing workflow"
+  - For "social media management": include "content calendar", "scheduling tools", "engagement", "social strategy"
 
 ### Keyword Stuffing (Avoid)
-❌ "Podcast hosting is important. Podcast hosting helps podcasters. Our podcast hosting platform offers podcast hosting services for podcast hosting needs."
+❌ "Social media management is important. Social media management helps businesses. Our social media management service offers social media management for social media management needs."
 
-✅ "Podcast hosting is important for creators who want to distribute their show to major platforms. A reliable host ensures your episodes are accessible wherever listeners discover new content."
+✅ "Social media management is how local businesses stay visible without burning hours every week. A consistent posting engine turns one good idea into a month of content that drives engagement, foot traffic, and sales."
 
 ## Content Structure Requirements
 
@@ -136,23 +162,23 @@ Primary keyword MUST appear in:
 
 ### Meta Title
 **Requirements**:
-- **Length**: 50-60 characters (including "| Castos" if used)
+- **Length**: 50-60 characters (including "| Clickity" if used)
 - **Primary keyword**: Must be included
 - **Compelling**: Should encourage clicks from SERP
-- **Unique**: Different from all other Castos page titles
+- **Unique**: Different from all other Clickity page titles
 - **Accurate**: Must match page content
 
 **Format Options**:
 - `[Primary Keyword]: [Benefit/Promise]`
 - `How to [Goal] | [Qualifier]`
 - `[Number] Ways to [Achieve Benefit]`
-- `[Topic] Guide for [Audience] | Castos`
+- `[Topic] Guide for [Audience] | Clickity`
 
 **Examples**:
-- ✅ "How to Start a Podcast in 2025: Complete Guide"
-- ✅ "12 Proven Podcast Growth Strategies | Castos"
-- ❌ "Podcast Tips and Tricks" (too vague, no keyword)
-- ❌ "The Ultimate Comprehensive Guide to Everything About Starting Your First Podcast Successfully" (too long)
+- ✅ "Done-for-You Social Media: A 2026 Guide"
+- ✅ "7 Social Media Management Tips for SMBs | Clickity"
+- ❌ "Marketing Tips and Tricks" (too vague, no keyword)
+- ❌ "The Ultimate Comprehensive Guide to Everything About Marketing Your Small Business Online" (too long)
 
 ### Meta Description
 **Requirements**:
@@ -169,9 +195,9 @@ Primary keyword MUST appear in:
 ```
 
 **Examples**:
-- ✅ "Learn how to start a podcast with our step-by-step guide. Everything from equipment to launch strategy. Perfect for beginners. Start your show today." (159 chars)
-- ✅ "Discover 12 proven podcast growth strategies that top creators use. Increase downloads, engagement, and audience loyalty. Actionable tips inside." (155 chars)
-- ❌ "This is a blog post about podcasting where we discuss many podcast-related topics." (vague, no value prop, no CTA)
+- ✅ "Want consistent posts without the overhead? See how done-for-you social media works, what it costs, and when it pays off. Get the full breakdown." (152 chars)
+- ✅ "Discover 7 social media management tips that help small teams stay consistent, grow reach, and save hours every week. Actionable advice inside." (146 chars)
+- ❌ "This is a blog post about marketing where we discuss many marketing-related topics." (vague, no value prop, no CTA)
 
 ### URL Slug
 **Requirements**:
@@ -184,48 +210,56 @@ Primary keyword MUST appear in:
 **Format**: `/blog/[primary-keyword-phrase]`
 
 **Examples**:
-- ✅ `/blog/start-podcast-guide`
-- ✅ `/blog/podcast-growth-strategies`
-- ✅ `/blog/podcast-editing-software`
-- ❌ `/blog/how-to-start-a-podcast-in-2025-the-complete-guide` (too long)
+- ✅ `/blog/done-for-you-social-media`
+- ✅ `/blog/social-media-management-smb`
+- ✅ `/blog/ai-marketing-agents`
+- ❌ `/blog/the-complete-guide-to-done-for-you-content-marketing-in-2026` (too long)
 - ❌ `/blog/post-12345` (no keywords)
 
 ## Internal Linking Strategy
+
+Internal linking is one of the most powerful levers a new, low-authority site has. It distributes what little authority we have to the pages that matter most and tells Google we own a topic. Treat it as a cluster-building exercise, not an afterthought.
 
 ### Requirements
 - **Minimum**: 3 internal links per article
 - **Optimal**: 4-5 internal links
 - **Maximum**: 7 internal links (unless 3,000+ word article)
 
+### Cluster-First Linking Rule
+- **Every supporting article must link up to its pillar page** using descriptive anchor text.
+- **Pillar pages should link down to their key supporting articles.**
+- Supporting articles within the same cluster should link to each other where contextually relevant.
+- This hub-and-spoke structure is how a new site builds topical authority fastest.
+
 ### Link Types to Include
 
 #### 1. Pillar Content (1-2 links)
-- Link to main comprehensive guides on related topics
+- Link to the main comprehensive guide for the cluster this article belongs to
 - Builds topic cluster authority
-- Usually 2,000+ word cornerstone content
+- Usually 3,000+ word cornerstone content
 
 #### 2. Related Blog Posts (2-3 links)
-- Link to articles on related subtopics
-- Creates content web
-- Helps readers explore topics comprehensively
+- Link to other supporting articles on related subtopics
+- Creates the content web that signals topical depth
+- Helps readers explore the topic comprehensively
 
-#### 3. Product/Feature Pages (0-1 link)
+#### 3. Service / Offer Pages (0-1 link)
 - Only when contextually relevant
-- Natural mention of how Castos solves problem
+- Natural mention of how Clickity's done-for-you service solves the problem
 - Never forced or overly promotional
 
 #### 4. Resource Pages (0-1 link)
-- Templates, tools, checklists
+- Templates, frameworks, checklists, the waitlist signup
 - When mentioned as solutions in content
 - Provides additional value to reader
 
 ### Internal Linking Best Practices
 
 **Anchor Text**:
-- ✅ Descriptive and keyword-rich: "our complete guide to podcast analytics"
-- ✅ Natural in sentence flow: "Learn more about podcast SEO strategies"
+- ✅ Descriptive and keyword-rich: "our complete guide to social media management"
+- ✅ Natural in sentence flow: "Learn more about AI marketing workflows"
 - ❌ Generic: "click here" or "read more"
-- ❌ Exact match repeatedly: Always using same anchor text for same page
+- ❌ Exact match repeatedly: Always using the same anchor text for the same page
 
 **Placement**:
 - Within body paragraphs (most valuable)
@@ -234,15 +268,15 @@ Primary keyword MUST appear in:
 - Distributed throughout article, not clustered
 
 **Reference**:
-- Always check @context/internal-links-map.md for priority linking targets
+- Always check @context/internal-links-map.md for priority linking targets and the current pillar/cluster map
 - Ensure links are current and functional
-- Link to most relevant, up-to-date content
+- Link to the most relevant, up-to-date content
 
 ## External Linking Strategy
 
 ### Requirements
 - **Minimum**: 2 external links per article
-- **Optimal**: 3-4 external authority links
+- **Optimal**: 2-3 external authority links
 - Purpose: Add credibility, provide sources, support claims
 
 ### What to Link Externally
@@ -253,8 +287,8 @@ Primary keyword MUST appear in:
 
 ### External Link Quality Standards
 - **Authority**: Link to credible, well-known sources
-  - ✅ Industry publications (Podcast Host, Podnews, etc.)
-  - ✅ Research institutions and studies
+  - ✅ Reputable marketing publications and research (Content Marketing Institute, HubSpot Research, Sprout Social data, Nielsen, etc.)
+  - ✅ Research institutions and original studies
   - ✅ Established media outlets
   - ❌ Random blogs with no authority
   - ❌ Spammy or low-quality sites
@@ -272,7 +306,7 @@ Primary keyword MUST appear in:
 
 ### Target Reading Level
 - **Goal**: 8th-10th grade reading level (Flesch-Kincaid)
-- Makes content accessible to wider audience
+- Makes content accessible to busy founders, marketers, and SMB owners
 - Easier to scan and understand quickly
 
 ### Sentence Structure
@@ -283,7 +317,7 @@ Primary keyword MUST appear in:
 
 ### Paragraph Structure
 - **Length**: 2-4 sentences per paragraph
-- **One idea**: Focus each paragraph on single point
+- **One idea**: Focus each paragraph on a single point
 - **White space**: No walls of text
 - **Mobile-friendly**: Short paragraphs scan better on phones
 
@@ -304,39 +338,49 @@ Use transition words to improve flow (target: one per paragraph):
 
 ## Content Quality Standards
 
-### Expertise, Authoritativeness, Trustworthiness (E-A-T)
+### Experience, Expertise, Authoritativeness, Trustworthiness (E-E-A-T)
+
+Clickity pairs AI agents with **real human Brand Managers** (senior, strategic marketers), so E-E-A-T is a genuine competitive advantage, not a checkbox. Google's quality guidelines reward demonstrated, first-hand human expertise, exactly what a team running real campaigns for real brands can show. Because our domain is new, strong E-E-A-T signals are how we earn trust faster than our authority score alone would allow. Lead with real human expertise and outcomes, never with the volume of AI output.
+
+#### Experience (the first E)
+- Show real, first-hand experience running social campaigns and driving outcomes (engagement, foot traffic, conversions, revenue)
+- Use original examples, screenshots, and results from actual work where allowed
+- Reference Clickity's public proof point: **+12,000 brands since 2016**. This number is public-safe (product-context.md §14); use the number, never the transition story behind it
+- Include mini case studies and concrete before/after outcomes
 
 #### Expertise
-- Provide accurate, detailed information on podcasting topics
+- Provide accurate, detailed guidance on social media management, AI-powered marketing, and vertical-specific social strategy
 - Back claims with data and examples
-- Demonstrate deep understanding of podcast creator needs
-- Include actionable, practical advice
+- Demonstrate deep understanding of US SMB needs across our verticals (HVAC and local service, real estate, local retail, e-commerce)
+- Include actionable, practical advice a reader could implement today
 
 #### Authoritativeness
-- Cite credible sources
+- Cite credible sources and original research
 - Reference industry data and trends
-- Include expert quotes when relevant
-- Leverage Castos's position as hosting platform
+- Attribute articles to a **real, named human author** (a Brand Manager or named marketer) with a relevant title and bio, never to "Team" or the brand alone
+- Leverage Clickity's outcomes focus and track record (+12,000 brands since 2016) as a managed, human-led platform
 
 #### Trustworthiness
-- Be transparent and honest
-- Acknowledge limitations or challenges
-- Don't overpromise results
+- Be transparent and honest about what managed, AI-plus-human social can and can't do
+- Acknowledge limitations and trade-offs (e.g., results compound over months)
+- Don't overpromise results or imply guaranteed rankings or revenue
 - Cite sources for all statistics and claims
 - Update outdated content regularly
 
+> **Authors (RESOLVED 2026-06-22):** Henry Earle-A'Hern (Founder) is approved as a public byline author. **Client results, brand names, and Brand Manager bios still need approval** before being referenced. > **[CONFIRM: which client results and named brands can be published.]**
+
 ### Content Originality
 - **Never plagiarize**: All content must be original
-- **Add unique value**: What perspective or insight do we add?
-- **Fresh examples**: Use current, relevant examples
-- **Updated data**: Use most recent statistics available
-- **Unique angle**: Differentiate from competitor content
+- **Add unique value**: What perspective or insight do we add as practitioners?
+- **Fresh examples**: Use current, relevant examples from our own work where allowed
+- **Updated data**: Use the most recent statistics available
+- **Unique angle**: Differentiate from competitor content, the insider, done-for-you operator's view
 
 ### Factual Accuracy
 - **Verify statistics**: Check all numbers and data points
-- **Current information**: Ensure practices/processes are up-to-date
-- **Technical accuracy**: Podcasting terminology and processes must be correct
-- **Castos features**: Ensure product references are accurate
+- **Current information**: Ensure tactics and platform behaviours are up-to-date
+- **Technical accuracy**: Marketing and platform terminology must be correct
+- **Clickity service references**: Ensure descriptions of our service and offer are accurate
 
 ## Image Optimization
 
@@ -349,35 +393,53 @@ Use transition words to improve flow (target: one per paragraph):
 ### Image SEO
 **File Names**:
 - Descriptive and keyword-rich
-- ✅ `podcast-editing-software-interface.jpg`
+- ✅ `social-media-content-calendar-template.jpg`
 - ❌ `IMG_12345.jpg`
 
 **Alt Text**:
-- Describe what image shows (accessibility + SEO)
+- Describe what the image shows (accessibility + SEO)
 - Include keywords naturally where relevant
 - 125 characters or less
-- ✅ "Podcast editing software interface showing waveform and timeline"
+- ✅ "Social media content calendar template showing a week of scheduled posts"
 - ❌ "Image"
 
 **Placement**:
 - Break up long text sections
 - Illustrate concepts being discussed
-- After explaining concept, not before
+- After explaining a concept, not before
+
+## Schema & Structured Data
+
+Structured data helps a new site stand out in SERPs and earn rich results despite low authority. Implement JSON-LD via the WordPress publisher / Yoast where possible.
+
+### Recommended Schema Types
+- **Organization** (site-wide): Establish Clickity as an entity (name, logo, URL, social profiles, and `sameAs` links). This is foundational entity-building for a new brand.
+- **Service**: On service/offer pages, mark up Clickity's AI-native, human-led social media management offering (service type, provider, area served).
+- **Article / BlogPosting**: On every blog post, include `author` (real, named human), `datePublished`, `dateModified`, headline, and image. Reinforces E-E-A-T signals.
+- **FAQPage**: On articles with an FAQ section, targets People Also Ask and rich results, and matches how users prompt AI tools.
+- **LocalBusiness**: Only if a real, verified business address is used. > **[CONFIRM: real public address before using LocalBusiness schema]**
+- **BreadcrumbList**: Reinforces the pillar to cluster hierarchy in search results.
+
+### Rules
+- Only mark up content that is actually visible on the page (no hidden-content FAQ schema)
+- Keep `author` and `dateModified` accurate, since these double as E-E-A-T and AI-citation signals
+- Validate every schema block before publishing
+- Prioritize Organization and Article schema first; they compound entity authority for a new domain
 
 ## Featured Snippet Optimization
 
-Featured snippets appear at position 0 in Google search results. Optimize for them when possible.
+Featured snippets appear at position 0 in Google search results. For a new site, the most realistic snippet wins come from long-tail, question-based queries, so prioritize those.
 
 ### Question-Based Snippets
-- Include question as H2 heading
+- Include the question as an H2 heading
 - Answer concisely in 40-60 words immediately after
 - Use clear, direct language
 
 **Example**:
 ```markdown
-## What is Podcast Hosting?
+## What is done-for-you social media?
 
-Podcast hosting is a service that stores your audio files and generates an RSS feed that distributes your episodes to podcast platforms like Apple Podcasts, Spotify, and Google Podcasts. Without a host, listeners can't discover or access your show on their favorite apps.
+Done-for-you social media is a managed service where an external team plans, creates, and posts your social content for you. Instead of hiring in-house, you outsource strategy, creative, and scheduling, often with humans directing AI agents, so your brand publishes consistently without the internal overhead.
 ```
 
 ### List-Based Snippets
@@ -391,7 +453,7 @@ Podcast hosting is a service that stores your audio files and generates an RSS f
 - Clear headers and organized data
 
 ### Definition Snippets
-- Define term in first sentence after heading
+- Define the term in the first sentence after the heading
 - 40-60 word clear, concise definition
 - Expand with additional detail after
 
@@ -406,24 +468,24 @@ Podcast hosting is a service that stores your audio files and generates an RSS f
 
 ## AI Search Optimization (GEO/AICO)
 
-AI search engines (ChatGPT, Perplexity, Gemini, Claude) are now a significant traffic and recommendation channel. 5-15% of website traffic can come from AI sources, and 90% of buyers consult AI before purchase decisions. These guidelines ensure your content performs in both traditional Google search AND AI-generated answers.
+AI search engines (ChatGPT, Perplexity, Gemini, Claude) are now a significant traffic and recommendation channel. 5-15% of website traffic can come from AI sources, and 90% of buyers consult AI before purchase decisions. These guidelines ensure your content performs in both traditional Google search AND AI-generated answers. For a new domain that can't yet win on link authority, AI citation surfaces are a disproportionately important way to get discovered.
 
 ### Direct-Answer-First Principle
 
-AI scrapers prioritize content near the top of the page. When a user asks ChatGPT "best project management tool" or "how to start a podcast," the AI scans articles and pulls from the earliest clear answer it finds.
+AI scrapers prioritize content near the top of the page. When a user asks ChatGPT "best done-for-you social media service" or "how to manage social media for a small business," the AI scans articles and pulls from the earliest clear answer it finds.
 
 **Rules:**
 - **Answer the query directly in the first 1-2 sentences** of the article, before the narrative hook or story
 - For "best/top/how" queries, state the answer (or a clear thesis) immediately
-- Put the core answer in the meta description too — literally answer the question in 150-160 chars
+- Put the core answer in the meta description too: literally answer the question in 150-160 chars
 - Do NOT bury the answer behind 200+ words of context, history, or definitions
 - The narrative hook and APP formula still apply, but they come AFTER the direct answer sentence
 
-**Example — Before (traditional SEO):**
-> Most businesses struggle with choosing the right platform. In today's crowded market... [200 words later] ...the best option is X because...
+**Example, Before (traditional SEO):**
+> Most small businesses struggle to stay consistent online. In today's crowded market... [200 words later] ...the answer is to outsource to a managed service because...
 
-**Example — After (AI-optimized):**
-> The best project management tools in 2026 are Asana, Monday, and ClickUp — each optimized for different team sizes and workflows. Here's what separates them. [Then hook, story, depth]
+**Example, After (AI-optimized):**
+> The fastest way for a small team to post consistently is a done-for-you social media service, a managed team that handles strategy, creative, and scheduling for you. Here's how it works and when it's worth it. [Then hook, story, depth]
 
 ### TL;DR / Key Takeaways Block
 
@@ -442,18 +504,18 @@ Every article should include a TL;DR block near the top (after the introduction,
 **Rules:**
 - 3-5 bullet points maximum
 - Each bullet is a complete, standalone claim (not a teaser)
-- Use specific numbers, names, or outcomes — not vague summaries
-- This is NOT a table of contents — it's the article's actual conclusions up front
+- Use specific numbers, names, or outcomes, not vague summaries
+- This is NOT a table of contents. It's the article's actual conclusions up front
 
 ### Authority Signaling for AI
 
-AI models weight authoritativeness signals when choosing which sources to cite. Include these in every article:
+AI models weight authoritativeness signals when choosing which sources to cite. For a new brand, these are also entity-building signals. Include these in every article:
 
-- **Author attribution**: Named author, not just "Team" or brand name
+- **Author attribution**: Named human author, not just "Team" or the brand name
 - **Reviewer/editor credit**: "Reviewed by [name], [title]" where possible
 - **Last updated date**: Visible on the page, not just in metadata
-- **Expert verification badge**: Where applicable, note content has been expert-reviewed
-- **Year in titles**: Include current year for time-sensitive topics ("Best X Tools 2026")
+- **Heritage signal**: Where relevant, note Clickity's track record (12,000+ brands served since 2016) to reinforce credibility
+- **Year in titles**: Include the current year for time-sensitive topics ("Best Done-for-You Content Services 2026")
 
 These signals should be in the article's frontmatter for the WordPress publisher to render.
 
@@ -485,7 +547,7 @@ FAQ sections serve double duty: they target Google's People Also Ask AND they ma
 
 ### Content Repurposing for AI Citation Surface
 
-AI tools pull from many surfaces beyond your website: Medium, LinkedIn Pulse, Reddit, Quora, YouTube transcripts. One article should be repurposed across multiple platforms to maximize the chance of being cited.
+AI tools pull from many surfaces beyond your website: Medium, LinkedIn Pulse, Reddit, Quora, YouTube transcripts. One article should be repurposed across multiple platforms to maximize the chance of being cited. For a new domain with thin authority, this off-site presence is one of the most effective ways to get discovered and cited.
 
 This is handled by the `/repurpose` command, but writers should be aware: the more surfaces your content appears on (with attribution back to your site), the higher the chance AI recommends it.
 
@@ -498,7 +560,7 @@ For competitive topics, audit which sources AI actually cites. See `context/ai-c
 ### When to Update Content
 - Article is 12+ months old
 - Statistics or data are outdated
-- Processes or best practices have changed
+- Tactics or platform best practices have changed
 - Competitor content has surpassed ours
 - Rankings have declined
 - New relevant information available
@@ -509,18 +571,23 @@ For competitive topics, audit which sources AI actually cites. See `context/ai-c
 - Screenshots with current versions
 - Examples with recent case studies
 - SEO elements (keyword focus may have shifted)
-- Internal links to newer content
+- Internal links to newer content (and any new pillar/cluster relationships)
 
 ## SEO Checklist for Every Article
 
 Before publishing, verify:
+
+### Strategy (New-Site)
+- [ ] Targets a long-tail, low-difficulty, high-intent keyword (not an unwinnable head term)
+- [ ] Belongs to a defined pillar/cluster and links up to its pillar page
+- [ ] Adds a unique, practitioner-led angle vs. competitors
 
 ### Content
 - [ ] 2,000+ words (or appropriate for content type)
 - [ ] Primary keyword identified
 - [ ] Keyword density 1-2%
 - [ ] 3-5 secondary keywords included
-- [ ] LSI keywords naturally integrated
+- [ ] Semantic/related keywords naturally integrated
 - [ ] Provides unique value vs. competitors
 - [ ] Factually accurate and current
 
@@ -540,6 +607,7 @@ Before publishing, verify:
 
 ### Links
 - [ ] 3-5 internal links included
+- [ ] At least one link up to the cluster's pillar page
 - [ ] Internal links use descriptive anchor text
 - [ ] 2-3 external authority links
 - [ ] All links functional (no broken links)
@@ -558,6 +626,18 @@ Before publishing, verify:
 - [ ] Descriptive file names
 - [ ] Alt text with keywords
 - [ ] Images optimized for web
+
+### Schema & Structured Data
+- [ ] Article/BlogPosting schema with named author and dateModified
+- [ ] FAQPage schema where an FAQ section exists
+- [ ] Organization/Service/Breadcrumb schema where applicable
+- [ ] All schema validated before publishing
+
+### E-E-A-T
+- [ ] Named human author with relevant bio
+- [ ] First-hand experience or real examples shown where possible
+- [ ] Clickity heritage (12,000+ brands since 2016) referenced where it adds credibility
+- [ ] Claims and statistics sourced; no overpromising
 
 ### AI Search Optimization
 - [ ] Direct answer in first 1-2 sentences (not buried)
@@ -580,19 +660,20 @@ Before publishing, verify:
 ## SEO Tools & Resources
 
 ### Recommended Tools
-- **Keyword Research**: Ahrefs, SEMrush, Google Keyword Planner
+- **Keyword Research**: Ahrefs, SEMrush, Google Keyword Planner (filter hard on low keyword difficulty)
 - **Content Analysis**: Clearscope, Surfer SEO, MarketMuse
 - **Readability**: Hemingway Editor, Grammarly
 - **Technical SEO**: Screaming Frog, Google Search Console
 - **Rank Tracking**: Ahrefs, SEMrush, Google Search Console
 
 ### Reference Resources
-- Google's Search Quality Evaluator Guidelines
+- Google's Search Quality Evaluator Guidelines (especially E-E-A-T)
 - Moz Beginner's Guide to SEO
 - Backlinko Blog (Brian Dean)
 - Search Engine Journal
 - Ahrefs Blog
+- Content Marketing Institute
 
 ---
 
-**Remember**: SEO serves the user, not the algorithm. Never sacrifice content quality, accuracy, or helpfulness for keyword optimization. The best SEO is great content that genuinely helps your audience succeed.
+**Remember**: SEO serves the user, not the algorithm. As a new site, our edge isn't authority. It's genuinely useful, practitioner-led content built into tight topic clusters. Never sacrifice content quality, accuracy, or helpfulness for keyword optimization. The best SEO is great content that genuinely helps founders, marketers, and SMB owners succeed.

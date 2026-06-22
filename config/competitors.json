@@ -1,0 +1,85 @@
+{
+  "_comment": "Clickity (useclickity.com) is a SEAN — a Software-Enabled Agency / AI-native social media management service (humans-lead-AI). See context/product-context.md. IMPORTANT: 'direct_competitors' here = SERP/benchmark domains to analyze for ranking + content-gap research, NOT business rivals. Business rivals are AI content tools (Blaze, Holo) + agencies; per the context doc, do NOT name competitors in published copy unless writing deliberate comparison content. Buffer/Hootsuite/Sprout are SOFTWARE (DIY tools), not what Clickity is — they are kept only as informational-SERP benchmarks because they own the social-media how-to content space. Do not chase generic tool head terms.",
+  "direct_competitors": [
+    "blaze.ai",
+    "sproutsocial.com",
+    "hootsuite.com",
+    "buffer.com"
+  ],
+  "content_competitors": [
+    "blog.hubspot.com",
+    "socialmediaexaminer.com",
+    "neilpatel.com"
+  ],
+  "bofu_keywords": [
+    "social media management service",
+    "done for you social media",
+    "ai social media management",
+    "ai social media agency",
+    "social media management for small business",
+    "social media management for real estate agents",
+    "social media management for hvac",
+    "software enabled agency",
+    "social media management pricing",
+    "managed social media service"
+  ],
+  "mofu_keywords": [
+    "social media marketing for small business",
+    "social media content strategy",
+    "social media roi",
+    "how much does social media management cost",
+    "agency vs in house social media",
+    "social media that drives sales"
+  ],
+  "alternative_keywords": [
+    "social media agency alternatives",
+    "alternative to hiring a social media manager",
+    "diy social media vs agency",
+    "ai social media tool vs agency"
+  ],
+  "key_queries": [
+    "social media management service",
+    "ai social media agency",
+    "turn content into revenue",
+    "clickity"
+  ],
+  "relevant_terms": [
+    "social media management",
+    "social media marketing",
+    "content marketing",
+    "social media agency",
+    "social media strategy",
+    "brand growth",
+    "organic social",
+    "paid social",
+    "ai agents",
+    "brand manager",
+    "small business",
+    "ecommerce",
+    "local business",
+    "roi",
+    "engagement",
+    "leads",
+    "service",
+    "pricing"
+  ],
+  "skip_terms": [
+    "celebrity",
+    "net worth",
+    "biography",
+    "dating",
+    "clicker game",
+    "clicky analytics",
+    "cookie clicker",
+    "clickity clack"
+  ],
+  "topic_patterns": {
+    "Service & Offering": ["service", "done for you", "managed", "agency", "sean", "package", "brand manager"],
+    "Pricing": ["price", "pricing", "cost", "plan", "how much", "$99"],
+    "Outcomes & ROI": ["roi", "revenue", "sales", "leads", "conversion", "foot traffic", "outcome", "results"],
+    "Verticals": ["hvac", "real estate", "ecommerce", "retail", "local business", "restaurant", "saas"],
+    "Social Platforms": ["instagram", "linkedin", "tiktok", "facebook", "pinterest", "youtube", "threads", "google business"],
+    "AI & Automation": ["ai", "agent", "automation", "generate", "ai-native"],
+    "Strategy & How-To": ["how to", "guide", "strategy", "best practices", "tips", "calendar", "frequency"]
+  }
+}

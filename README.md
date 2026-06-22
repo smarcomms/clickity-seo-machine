@@ -1,6 +1,6 @@
-# SEO Machine
+# Clickity SEO Machine
 
-A specialized Claude Code workspace for creating long-form, SEO-optimized blog content for any business. This system helps you research, write, analyze, and optimize content that ranks well and serves your target audience.
+A specialized Claude Code workspace for creating long-form, SEO-optimized blog content for Clickity. This system helps you research, write, analyze, and optimize content that ranks well and serves your target audience.
 
 ## Overview
 
