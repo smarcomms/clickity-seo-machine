@@ -10,6 +10,52 @@ import textstat
 from typing import Dict, List, Optional, Any
 
 
+def _ensure_cmudict() -> None:
+    """
+    textstat's syllable counting relies on NLTK's cmudict corpus. On a fresh
+    machine it is not present, and NLTK's auto-download fails behind strict SSL
+    (the macOS "CERTIFICATE_VERIFY_FAILED" issue), which makes textstat raise a
+    LookupError and silently zero out every readability metric.
+
+    Ensure the corpus is available, falling back to an unverified SSL context
+    only for this one trusted download if the verified download fails. Safe to
+    call repeatedly; it no-ops once the corpus is cached.
+    """
+    try:
+        import nltk
+    except ImportError:
+        return  # textstat will handle its own fallback
+
+    try:
+        nltk.data.find('corpora/cmudict')
+        return  # already available
+    except LookupError:
+        pass
+
+    try:
+        nltk.download('cmudict', quiet=True)
+        nltk.data.find('corpora/cmudict')
+        return
+    except Exception:
+        pass
+
+    # Verified download failed (common on macOS); retry once with an
+    # unverified context for this trusted corpus only.
+    try:
+        import ssl
+        _original = ssl._create_default_https_context
+        ssl._create_default_https_context = ssl._create_unverified_context
+        try:
+            nltk.download('cmudict', quiet=True)
+        finally:
+            ssl._create_default_https_context = _original
+    except Exception:
+        pass  # leave textstat to its own fallback if all else fails
+
+
+_ensure_cmudict()
+
+
 class ReadabilityScorer:
     """Analyzes content readability using multiple metrics"""
 

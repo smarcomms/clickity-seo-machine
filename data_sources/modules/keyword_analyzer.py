@@ -155,6 +155,7 @@ class KeywordAnalyzer:
         )
 
         return {
+            'keyword': keyword,
             'exact_matches': exact_count,
             'total_occurrences': total_count,
             'density': round(density, 2),
