@@ -92,6 +92,7 @@ class ContentScrubber:
             'unicode_removed': 0,
             'emdashes_replaced': 0,
             'format_control_removed': 0,
+            'ai_phrases_replaced': 0,
         }
 
         # Step 1: Remove specific watermark characters
@@ -307,6 +308,13 @@ def scrub_file(file_path: str, output_path: str = None, verbose: bool = False) -
 
 
 if __name__ == '__main__':
+    import sys
+
+    # If a file path is passed, scrub that file in place. Otherwise run the demo.
+    if len(sys.argv) > 1:
+        scrub_file(sys.argv[1], verbose=True)
+        sys.exit(0)
+
     # Test the scrubber
     test_content = """
     This is a test\u200Bcontent with invisible\uFEFF characters.

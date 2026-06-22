@@ -507,21 +507,30 @@ class ContentScorer:
         meta_description = metadata.get('meta_description', '')
         primary_keyword = metadata.get('primary_keyword', '')
 
-        # Extract from content if not provided
-        if not meta_title:
-            match = re.search(r'\*\*Meta Title\*\*:\s*(.+)', content)
+        # Extract from content if not provided. Support both the markdown
+        # "**Meta Title**:" style and YAML frontmatter "meta_title:" style.
+        def _from_content(markdown_label: str, yaml_key: str) -> str:
+            match = re.search(r'\*\*' + markdown_label + r'\*\*:\s*(.+)', content)
             if match:
-                meta_title = match.group(1).strip()
+                return match.group(1).strip()
+            # YAML frontmatter key, with optional surrounding quotes
+            match = re.search(
+                r'^' + yaml_key + r':\s*["\']?(.+?)["\']?\s*$',
+                content,
+                re.MULTILINE,
+            )
+            if match:
+                return match.group(1).strip()
+            return ''
+
+        if not meta_title:
+            meta_title = _from_content('Meta Title', 'meta_title')
 
         if not meta_description:
-            match = re.search(r'\*\*Meta Description\*\*:\s*(.+)', content)
-            if match:
-                meta_description = match.group(1).strip()
+            meta_description = _from_content('Meta Description', 'meta_description')
 
         if not primary_keyword:
-            match = re.search(r'\*\*(?:Target|Primary) Keyword\*\*:\s*(.+)', content)
-            if match:
-                primary_keyword = match.group(1).strip()
+            primary_keyword = _from_content('(?:Target|Primary) Keyword', 'primary_keyword')
 
         details['meta_title'] = meta_title
         details['meta_title_length'] = len(meta_title)
