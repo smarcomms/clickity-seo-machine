@@ -3,6 +3,7 @@ const tsParser = require('@typescript-eslint/parser');
 
 const globals = {
   // Node.js globals
+  AbortController: 'readonly',
   Buffer: 'readonly',
   __dirname: 'readonly',
   __filename: 'readonly',
