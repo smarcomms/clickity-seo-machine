@@ -16,6 +16,7 @@ import type { SeoBlogInput } from '../schemas/seo-blog-input';
 import { runResearchStep } from './steps/research-step';
 import { runOutlineStep } from './steps/outline-step';
 import { runWriterStep } from './steps/writer-step';
+import { runSeoQaStep } from './steps/seo-qa-step';
 import { markRunRunningStep, markRunFailedStep, completeRunStep } from './steps/helpers';
 
 export async function seoBlogWorkflow(
@@ -49,14 +50,26 @@ export async function seoBlogWorkflow(
     );
     console.log(`[v0] Stage 3: Writer completed and persisted`);
 
+    // Stage 4: SEO QA - runs as durable step
+    console.log(`[v0] Stage 4: Running SEO QA step`);
+    const seoQaOutput = await runSeoQaStep(
+      runId,
+      input,
+      researchOutput,
+      outlineOutput,
+      writerOutput.draft_markdown
+    );
+    console.log(`[v0] Stage 4: SEO QA completed and persisted`);
+
     // Complete: Mark workflow as done with human review required
     console.log(`[v0] Workflow: Completing run`);
     const finalOutput = {
       research_json: researchOutput,
       outline_json: outlineOutput,
       draft_markdown: writerOutput.draft_markdown,
+      seo_qa_json: seoQaOutput,
       human_review_required: true,
-      workflow_status: 'draft_complete_awaiting_review',
+      workflow_status: 'seo_qa_complete_awaiting_review',
       timestamp: new Date().toISOString(),
     };
     await completeRunStep(runId, finalOutput);
