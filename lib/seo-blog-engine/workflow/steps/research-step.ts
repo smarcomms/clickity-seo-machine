@@ -2,6 +2,7 @@
 
 import 'server-only';
 import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 
 export interface ResearchOutput {
@@ -68,11 +69,14 @@ Website: ${input.website_url || 'unknown'}
 Provide comprehensive research findings in JSON format.`;
 
   try {
-    // Get model from environment or use OpenAI default
-    const model = process.env.RESEARCH_AGENT_MODEL || 'openai/gpt-5.4';
-    console.log(`[v0] Research step: Using model: ${model}`);
+    // Get model name from environment or use default
+    const modelName = process.env.RESEARCH_AGENT_MODEL || 'gpt-4o-mini';
+    console.log(`[v0] Research step: Using model: ${modelName}`);
 
-    // Call AI model via Vercel AI Gateway
+    // Use direct OpenAI provider with OPENAI_API_KEY
+    const model = openai(modelName);
+
+    // Call AI model
     const response = await generateText({
       model,
       system: systemPrompt,
