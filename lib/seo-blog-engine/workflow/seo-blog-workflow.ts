@@ -15,6 +15,7 @@ import type { SeoBlogInput } from '../schemas/seo-blog-input';
 // Import step functions (they have 'use step' directive)
 import { runResearchStep } from './steps/research-step';
 import { runOutlineStep } from './steps/outline-step';
+import { runWriterStep } from './steps/writer-step';
 import { markRunRunningStep, markRunFailedStep, completeRunStep } from './steps/helpers';
 
 export async function seoBlogWorkflow(
@@ -38,13 +39,24 @@ export async function seoBlogWorkflow(
     const outlineOutput = await runOutlineStep(runId, input, researchOutput);
     console.log(`[v0] Stage 2: Outline completed and persisted`);
 
+    // Stage 3: Writer - runs as durable step
+    console.log(`[v0] Stage 3: Running writer step`);
+    const writerOutput = await runWriterStep(
+      runId,
+      input,
+      researchOutput,
+      outlineOutput
+    );
+    console.log(`[v0] Stage 3: Writer completed and persisted`);
+
     // Complete: Mark workflow as done with human review required
     console.log(`[v0] Workflow: Completing run`);
     const finalOutput = {
       research_json: researchOutput,
       outline_json: outlineOutput,
+      draft_markdown: writerOutput.draft_markdown,
       human_review_required: true,
-      workflow_status: 'research_complete_awaiting_review',
+      workflow_status: 'draft_complete_awaiting_review',
       timestamp: new Date().toISOString(),
     };
     await completeRunStep(runId, finalOutput);
