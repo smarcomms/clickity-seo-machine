@@ -3,6 +3,7 @@
 import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { updateRunStatus } from '../../storage/runs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 
 export interface Section {
@@ -169,6 +170,10 @@ ${additionalNotes}${researchContext}`;
     }
 
     console.log(`[v0] Outline step: Generated outline with ${outlineData.sections.length} sections`);
+    // Persist outline_json to database
+    console.log(`[v0] Outline step: Persisting outline_json for run ${runId}`);
+    await updateRunStatus(runId, 'outlining', outlineData);
+
     return outlineData;
   } catch (error) {
     console.error(`[v0] Outline step error:`, error instanceof Error ? error.message : String(error));

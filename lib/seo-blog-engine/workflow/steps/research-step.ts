@@ -3,6 +3,7 @@
 import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { updateRunStatus } from '../../storage/runs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 
 export interface ResearchOutput {
@@ -116,6 +117,10 @@ Provide comprehensive research findings in JSON format.`;
         timestamp: new Date().toISOString(),
       };
     }
+
+    // Persist research_json to database
+    console.log(`[v0] Research step: Persisting research_json for run ${runId}`);
+    await updateRunStatus(runId, 'researching', researchData);
 
     console.log(`[v0] Research step: Complete for run ${runId}`);
     return researchData;
