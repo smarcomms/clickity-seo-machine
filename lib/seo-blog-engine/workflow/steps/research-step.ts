@@ -70,7 +70,7 @@ Provide comprehensive research findings in JSON format.`;
 
   try {
     // Get model name from environment or use default
-    const modelName = process.env.RESEARCH_AGENT_MODEL || 'gpt-4o-mini';
+    const modelName = process.env.RESEARCH_AGENT_MODEL || 'gpt-5.4-mini';
     console.log(`[v0] Research step: Using model: ${modelName}`);
 
     // Use direct OpenAI provider with OPENAI_API_KEY
