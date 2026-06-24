@@ -3,7 +3,7 @@
 import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { updateRunStatus } from '../../storage/runs';
+import { updateRunDraft, updateRunStatus } from '../../storage/runs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { OutlineOutput } from './outline-step';
 
@@ -145,11 +145,13 @@ Guidelines:
       timestamp: new Date().toISOString(),
     };
 
-    // Persist draft_markdown to database
+    // Persist draft_markdown to database (markdown string only, not full object)
     console.log(
       `[v0] Writer step: Persisting draft_markdown (${wordCount} words) for run ${runId}`
     );
-    await updateRunStatus(runId, 'writing', writerOutput);
+    await updateRunDraft(runId, writerOutput.draft_markdown);
+    // Also update status to 'writing'
+    await updateRunStatus(runId, 'writing');
 
     console.log(
       `[v0] Writer step: Complete for run ${runId} (${wordCount} words, ${sectionsCount} sections)`
