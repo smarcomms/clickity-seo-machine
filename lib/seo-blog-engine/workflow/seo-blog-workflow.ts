@@ -10,6 +10,7 @@ import type { SeoBlogInput } from '../schemas/seo-blog-input';
 
 // Import step functions (they have 'use step' directive)
 import { runResearchStep } from './steps/research-step';
+import { runOutlineStep } from './steps/outline-step';
 
 declare function Step(name: string, fn: () => Promise<any>): Promise<any>;
 
@@ -24,13 +25,10 @@ export async function seoBlogWorkflow(
   const researchOutput = await runResearchStep(runId, input);
   console.log(`[v0] Stage 1: Research completed`);
 
-  // Stage 2: Outline (mocked for Phase 2C-A)
-  console.log(`[v0] Stage 2: Outline (mocked)`);
-  const outlineOutput = {
-    status: 'mock',
-    outline: ['Introduction', 'Content Section 1', 'Content Section 2', 'Conclusion'],
-    timestamp: new Date().toISOString(),
-  };
+  // Stage 2: Outline - runs as durable step
+  console.log(`[v0] Stage 2: Running outline step`);
+  const outlineOutput = await runOutlineStep(runId, input, researchOutput);
+  console.log(`[v0] Stage 2: Outline completed`);
 
   // Complete: Mark workflow as done with human review required
   console.log(`[v0] Completing workflow`);
