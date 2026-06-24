@@ -20,6 +20,7 @@ import { runSeoQaStep } from './steps/seo-qa-step';
 import { runEditorStep } from './steps/editor-step';
 import { runMetaStep } from './steps/meta-step';
 import { markRunRunningStep, markRunFailedStep, completeRunStep } from './steps/helpers';
+import { sendCallbackStep } from './steps/callback-step';
 
 export async function seoBlogWorkflow(
   runId: string,
@@ -105,6 +106,19 @@ export async function seoBlogWorkflow(
     };
     await completeRunStep(runId, finalOutput);
 
+    // Send completion callback (orchestrator level, not from helper step)
+    // Callback delivery failures do not fail the completed run
+    console.log(`[v0] Workflow: Sending completion callback`);
+    try {
+      await sendCallbackStep(runId);
+    } catch (callbackErr) {
+      console.error(
+        `[v0] Workflow: Callback delivery failed:`,
+        callbackErr instanceof Error ? callbackErr.message : String(callbackErr)
+      );
+      // Callback failure does not fail the workflow
+    }
+
     console.log(`[v0] SEO Blog Workflow completed successfully for run ${runId}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -114,6 +128,19 @@ export async function seoBlogWorkflow(
       await markRunFailedStep(runId, errorMessage);
     } catch (failureErr) {
       console.error(`[v0] Failed to mark run as failed:`, failureErr instanceof Error ? failureErr.message : String(failureErr));
+    }
+
+    // Send failure callback (orchestrator level, not from helper step)
+    // Callback delivery failures do not change the failed status
+    console.log(`[v0] Workflow: Sending failure callback`);
+    try {
+      await sendCallbackStep(runId);
+    } catch (callbackErr) {
+      console.error(
+        `[v0] Workflow: Callback delivery failed:`,
+        callbackErr instanceof Error ? callbackErr.message : String(callbackErr)
+      );
+      // Callback failure does not change the failed status
     }
     
     // Re-throw to ensure workflow failure is recorded
