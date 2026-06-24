@@ -18,6 +18,7 @@ import { runOutlineStep } from './steps/outline-step';
 import { runWriterStep } from './steps/writer-step';
 import { runSeoQaStep } from './steps/seo-qa-step';
 import { runEditorStep } from './steps/editor-step';
+import { runMetaStep } from './steps/meta-step';
 import { markRunRunningStep, markRunFailedStep, completeRunStep } from './steps/helpers';
 
 export async function seoBlogWorkflow(
@@ -74,7 +75,20 @@ export async function seoBlogWorkflow(
     );
     console.log(`[v0] Stage 5: Editor completed`);
 
-    // Complete: Mark workflow as done with human review required
+    // Stage 6: Meta - runs as durable step
+    console.log(`[v0] Stage 6: Running meta step`);
+    const metaOutput = await runMetaStep(
+      runId,
+      input,
+      researchOutput,
+      outlineOutput,
+      writerOutput.draft_markdown,
+      seoQaOutput,
+      editorOutput.edited_draft_markdown
+    );
+    console.log(`[v0] Stage 6: Meta completed`);
+
+    // Complete: Mark workflow as done with human review required (after all stages)
     console.log(`[v0] Workflow: Completing run`);
     const finalOutput = {
       research_json: researchOutput,
@@ -84,8 +98,9 @@ export async function seoBlogWorkflow(
       edited_draft_markdown: editorOutput.edited_draft_markdown,
       editor_notes: editorOutput.editor_notes,
       changes_made: editorOutput.changes_made,
+      meta_json: metaOutput,
       human_review_required: true,
-      workflow_status: 'editing_complete_awaiting_review',
+      workflow_status: 'meta_complete_awaiting_review',
       timestamp: new Date().toISOString(),
     };
     await completeRunStep(runId, finalOutput);
