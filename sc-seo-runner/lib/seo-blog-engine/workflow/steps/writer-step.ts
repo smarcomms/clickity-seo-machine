@@ -65,12 +65,12 @@ export async function runWriterStep(
     // Build research context if available
     let researchContext = '';
     if (researchData && typeof researchData === 'object') {
-      const insights = (researchData as Record<string, any>).key_insights || [];
-      if (Array.isArray(insights) && insights.length > 0) {
-        researchContext = `\n\nResearch Insights:\n${insights
+      const findings = (researchData as Record<string, any>).key_findings || [];
+      if (Array.isArray(findings) && findings.length > 0) {
+        researchContext = `\n\nKey Research Findings:\n${findings
           .map(
-            (i: any) =>
-              `- ${typeof i === 'string' ? i : JSON.stringify(i)}`
+            (f: any) =>
+              `- ${typeof f === 'string' ? f : JSON.stringify(f)}`
           )
           .join('\n')}`;
       }

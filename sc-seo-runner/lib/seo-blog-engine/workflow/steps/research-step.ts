@@ -16,6 +16,7 @@ export interface ResearchOutput {
     lsi_terms: string[];
   };
   content_angle: string;
+  key_findings: string[];
   competitor_insights: string[];
   recommended_sections: string[];
   questions_to_answer: string[];
@@ -105,6 +106,11 @@ Provide comprehensive research findings in JSON format.`;
           lsi_terms: [],
         },
         content_angle: `Focus on ${input.blog_topic || 'topic'}`,
+        key_findings: [
+          `Topic focuses on ${input.blog_topic || 'the subject matter'}`,
+          `Target audience: ${input.audience_notes || 'general audience'}`,
+          `Primary keyword: ${input.primary_keyword || 'to be determined'}`,
+        ],
         competitor_insights: ['Research competitors for competitive advantages'],
         recommended_sections: ['Introduction', 'Main Content', 'Conclusion'],
         questions_to_answer: ['What is the main topic?'],

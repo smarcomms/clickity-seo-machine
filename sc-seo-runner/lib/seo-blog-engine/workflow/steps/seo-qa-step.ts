@@ -54,10 +54,15 @@ export interface SeoQaOutput {
     cta_present: boolean;
     cta_analysis: string;
   };
+  client_goal_alignment: {
+    score: number;
+    analysis: string;
+  };
   risk_flags: string[];
   priority_fixes: string[];
-  recommended_next_action: string;
+  recommended_next_action: 'Approve for editor' | 'Revise before editor' | 'Needs human review';
   ready_for_editor: boolean;
+  needs_review: boolean;
   timestamp: string;
 }
 
@@ -201,8 +206,17 @@ function generateFallbackSeoQa(
     draftMarkdown.toLowerCase().match(new RegExp(primaryKeyword.toLowerCase(), 'g')) || []
   ).length;
 
+  const overallScore = 68;
+  const readyForEditor = overallScore >= 70 && h1Count > 0;
+  const recommendedAction: 'Approve for editor' | 'Revise before editor' | 'Needs human review' =
+    overallScore >= 75 && readyForEditor
+      ? 'Approve for editor'
+      : overallScore >= 60 && readyForEditor
+        ? 'Revise before editor'
+        : 'Needs human review';
+
   return {
-    overall_score: 68,
+    overall_score: overallScore,
     search_intent_alignment: {
       score: 65,
       analysis: 'Draft covers basic search intent but may need refinement',
@@ -245,14 +259,19 @@ function generateFallbackSeoQa(
       cta_present: draftMarkdown.toLowerCase().includes('cta') || draftMarkdown.toLowerCase().includes('call'),
       cta_analysis: 'CTA section review needed',
     },
+    client_goal_alignment: {
+      score: 70,
+      analysis: 'Draft aligns with provided client goals and audience targeting',
+    },
     risk_flags: [],
     priority_fixes: [
       ...(h1Count === 0 ? ['Ensure H1 heading present'] : []),
       ...(wordCount < 1500 ? ['Expand content to meet word count target'] : []),
       ...(internalLinkCount === 0 ? ['Add internal linking strategy'] : []),
     ],
-    recommended_next_action: 'Send to editor for review and optimization',
-    ready_for_editor: true,
+    recommended_next_action: recommendedAction,
+    ready_for_editor: readyForEditor,
+    needs_review: overallScore < 70,
     timestamp: new Date().toISOString(),
   };
 }

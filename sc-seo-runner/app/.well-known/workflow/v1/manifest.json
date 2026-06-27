@@ -1,27 +1,6 @@
 {
   "version": "1.0.0",
   "steps": {
-    "node_modules/.pnpm/workflow@4.5.0_@nestjs+common@11.1.27_reflect-metadata@0.2.2_rxjs@7.8.2__@nestjs+core@1_a9c1aa6c0b580e9bf3bff64c3269fe43/node_modules/workflow/dist/internal/builtins.js": {
-      "__builtin_response_array_buffer": {
-        "stepId": "__builtin_response_array_buffer"
-      },
-      "__builtin_response_json": {
-        "stepId": "__builtin_response_json"
-      },
-      "__builtin_response_text": {
-        "stepId": "__builtin_response_text"
-      }
-    },
-    "lib/seo-blog-engine/workflow/steps/outline-step.ts": {
-      "runOutlineStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/outline-step//runOutlineStep"
-      }
-    },
-    "lib/seo-blog-engine/workflow/steps/meta-step.ts": {
-      "runMetaStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/meta-step//runMetaStep"
-      }
-    },
     "lib/seo-blog-engine/workflow/steps/helpers.ts": {
       "completeRunStep": {
         "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//completeRunStep"
@@ -33,9 +12,19 @@
         "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//markRunRunningStep"
       }
     },
-    "lib/seo-blog-engine/workflow/steps/callback-step.ts": {
-      "sendCallbackStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/callback-step//sendCallbackStep"
+    "lib/seo-blog-engine/workflow/steps/meta-step.ts": {
+      "runMetaStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/meta-step//runMetaStep"
+      }
+    },
+    "lib/seo-blog-engine/workflow/steps/writer-step.ts": {
+      "runWriterStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/writer-step//runWriterStep"
+      }
+    },
+    "lib/seo-blog-engine/workflow/steps/outline-step.ts": {
+      "runOutlineStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/outline-step//runOutlineStep"
       }
     },
     "lib/seo-blog-engine/workflow/steps/seo-qa-step.ts": {
@@ -48,14 +37,25 @@
         "stepId": "step//./lib/seo-blog-engine/workflow/steps/editor-step//runEditorStep"
       }
     },
+    "lib/seo-blog-engine/workflow/steps/callback-step.ts": {
+      "sendCallbackStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/callback-step//sendCallbackStep"
+      }
+    },
+    "node_modules/.pnpm/workflow@4.5.0_@nestjs+common@11.1.27_reflect-metadata@0.2.2_rxjs@7.8.2__@nestjs+core@1_a9c1aa6c0b580e9bf3bff64c3269fe43/node_modules/workflow/dist/internal/builtins.js": {
+      "__builtin_response_array_buffer": {
+        "stepId": "__builtin_response_array_buffer"
+      },
+      "__builtin_response_json": {
+        "stepId": "__builtin_response_json"
+      },
+      "__builtin_response_text": {
+        "stepId": "__builtin_response_text"
+      }
+    },
     "lib/seo-blog-engine/workflow/steps/research-step.ts": {
       "runResearchStep": {
         "stepId": "step//./lib/seo-blog-engine/workflow/steps/research-step//runResearchStep"
-      }
-    },
-    "lib/seo-blog-engine/workflow/steps/writer-step.ts": {
-      "runWriterStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/writer-step//runWriterStep"
       }
     }
   },

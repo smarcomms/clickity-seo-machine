@@ -151,8 +151,14 @@ function buildMetaContext(
   originalDraft: string,
   editedDraft: string
 ): string {
+  // Validate required research.key_findings before using
+  if (!Array.isArray(research.key_findings)) {
+    throw new Error('Research output missing required key_findings array for meta-step');
+  }
+
   const wordCount = editedDraft.split(/\s+/).length;
   const headings = editedDraft.match(/^#+\s+.+$/gm) || [];
+  const keyFindingsSummary = research.key_findings.slice(0, 3).join('\n- ');
 
   return `You are an expert SEO metadata specialist. Generate SEO metadata for a blog post for human review.
 
@@ -164,7 +170,7 @@ SECONDARY KEYWORDS: ${(input.secondary_keywords || []).join(', ') || 'None provi
 TARGET AUDIENCE: ${input.audience_notes || 'General audience'}
 
 RESEARCH SUMMARY:
-${research.key_findings.slice(0, 3).join('\n')}
+- ${keyFindingsSummary}
 
 OUTLINE STRUCTURE:
 ${outline.sections.map((s) => `- ${s.heading} (${s.subsections?.length || 0} subsections)`).join('\n')}
