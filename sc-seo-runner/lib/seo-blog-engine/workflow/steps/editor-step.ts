@@ -3,6 +3,7 @@
 import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -32,16 +33,27 @@ export async function runEditorStep(
   console.log(`[v0] Editor step: Starting for run ${runId}`);
 
   try {
-    // Build context for editor
-    const editorContext = buildEditorContext(
-      input,
-      research,
-      outline,
-      seoQa
-    );
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('editor');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: editor');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: editor v${agentConfig.version}`);
 
-    // Get model name from environment or use default
-    const modelName = process.env.EDITOR_AGENT_MODEL || 'gpt-5.4-mini';
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    // Build context for editor
+    const editorContext = buildEditorContext(input, research, outline, seoQa);
+
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model || process.env.EDITOR_AGENT_MODEL || 'gpt-5.4-mini';
     console.log(`[v0] Editor step: Using model: ${modelName}`);
 
     // Generate improved draft
@@ -49,26 +61,7 @@ export async function runEditorStep(
       model: openai(modelName),
       temperature: 0.7,
       maxTokens: 8000,
-      system: `You are an expert content editor. Your role is to improve blog drafts based on SEO QA feedback while maintaining authenticity and brand voice.
-
-IMPORTANT RULES:
-1. Preserve the original H1/H2/H3 structure
-2. Improve clarity, transitions, and readability
-3. Fix issues identified in SEO QA output
-4. Keep keywords natural - prioritize readability over keyword stuffing
-5. Preserve all factual content and caution about limitations
-6. Do NOT invent statistics or fake claims
-7. Do NOT modify client claims or invented credentials
-8. Keep Markdown format
-9. Preserve CTA section if present
-10. Preserve internal link placeholders if present
-
-Output a JSON object with:
-{
-  "edited_draft": "complete improved markdown...",
-  "changes_summary": ["change 1", "change 2", ...],
-  "notes": ["note 1", "note 2", ...]
-}`,
+      system: systemPrompt,
       messages: [
         {
           role: 'user',

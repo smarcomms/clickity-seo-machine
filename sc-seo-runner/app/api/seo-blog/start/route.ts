@@ -35,6 +35,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log preserved input keys for debugging
+    const preservedKeys = Object.keys(parseResult.data).sort();
+    console.log(`[v0] SEO Blog Start: preserved input keys: ${preservedKeys.join(', ')}`);
+
     // Create run in database
     const run = await createRun(parseResult.data);
     console.log(`[v0] Created run ${run.id}`);

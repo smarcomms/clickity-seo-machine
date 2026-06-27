@@ -4,6 +4,7 @@ import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { updateRunDraft, updateRunStatus } from '../../storage/runs';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { OutlineOutput } from './outline-step';
 
@@ -30,84 +31,87 @@ export async function runWriterStep(
 ): Promise<WriterOutput> {
   console.log(`[v0] Writer step: Creating draft for run ${runId}`);
 
-  // Get model configuration
-  const modelName =
-    process.env.WRITER_AGENT_MODEL ||
-    process.env.RESEARCH_AGENT_MODEL ||
-    'gpt-5.4-mini';
-  console.log(`[v0] Writer step: Using model: ${modelName}`);
-
-  // Create context from available data
-  const topic = input.blog_topic || input.topic || 'Your Topic';
-  const primaryKeyword = input.primary_keyword || 'primary keyword';
-  const secondaryKeywords =
-    (input.secondary_keywords || input.keywords || []).join(', ') ||
-    'secondary keywords';
-  const businessName = input.business_name || 'Your Business';
-  const audienceNotes = input.audience_notes || 'Target audience not specified';
-  const brandVoice = input.brand_voice_notes || 'Professional and clear';
-  const ctaNotes = input.cta_notes || '';
-  const internalLinkNotes = input.internal_link_notes || '';
-  const additionalNotes = input.additional_order_notes || 'No additional notes';
-  const targetWordCount = input.target_word_count || 1500;
-
-  // Build research context if available
-  let researchContext = '';
-  if (researchData && typeof researchData === 'object') {
-    const insights = (researchData as Record<string, any>).key_insights || [];
-    if (Array.isArray(insights) && insights.length > 0) {
-      researchContext = `\n\nResearch Insights:\n${insights.map((i: any) => `- ${typeof i === 'string' ? i : JSON.stringify(i)}`).join('\n')}`;
-    }
-  }
-
-  // Build outline context if available
-  let outlineContext = '';
-  if (outlineData) {
-    const sections = (
-      (outlineData as Record<string, any>).sections || []
-    ).map(
-      (s: any) =>
-        `## ${typeof s === 'string' ? s : s.heading || 'Section'}\n(${(s as Record<string, any>).purpose || 'Section content'})`
-    );
-    if (sections.length > 0) {
-      outlineContext = `\n\nOutline Structure:\n${sections.join('\n\n')}`;
-    }
-  }
-
-  // Build internal links context
-  let linksContext = '';
-  if (internalLinkNotes) {
-    linksContext = `\n\nInternal Link Opportunities:\n${internalLinkNotes}`;
-  }
-
-  // Build CTA context
-  let ctaContext = '';
-  if (ctaNotes) {
-    ctaContext = `\n\nCall-to-Action Guidance:\n${ctaNotes}`;
-  }
-
-  const systemPrompt = `You are an expert SEO content writer. Write a first draft blog post in Markdown format that is:
-- SEO-optimized for the primary keyword: "${primaryKeyword}"
-- Naturally incorporating secondary keywords: ${secondaryKeywords}
-- Aligned with this brand voice: ${brandVoice}
-- Targeting this audience: ${audienceNotes}
-- Approximately ${targetWordCount} words in length
-- Written for "${businessName}"${additionalNotes ? `\n- Additional context: ${additionalNotes}` : ''}
-
-Guidelines:
-- Start with an H1 title that includes the primary keyword
-- Write an engaging introduction (100-150 words)
-- Structure with H2 and H3 subheadings as appropriate
-- Each section should be 150-300 words
-- Use natural, conversational language
-- Include practical examples and actionable insights
-- No fake statistics or invented claims
-- No publishing metadata or frontmatter${ctaContext ? '\n- Include a strong CTA section at the end' : ''}${linksContext ? '\n- Mark internal link opportunities as [link: description]' : ''}
-- Aim for the target word count but prioritize quality over exact count`;
-
-  const userMessage = `Write the first draft blog post about: ${topic}${researchContext}${outlineContext}${linksContext}${ctaContext}`;
-
   try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('writer');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: writer');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: writer v${agentConfig.version}`);
+
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    // Create context from available data
+    const topic = input.blog_topic || input.topic || 'Your Topic';
+    const primaryKeyword = input.primary_keyword || 'primary keyword';
+    const secondaryKeywords =
+      (input.secondary_keywords || input.keywords || []).join(', ') ||
+      'secondary keywords';
+    const businessName = input.business_name || 'Your Business';
+    const audienceNotes =
+      input.audience_notes || 'Target audience not specified';
+    const brandVoice = input.brand_voice_notes || 'Professional and clear';
+    const ctaNotes = input.cta_notes || '';
+    const internalLinkNotes = input.internal_link_notes || '';
+    const additionalNotes = input.additional_order_notes || 'No additional notes';
+    const targetWordCount = input.target_word_count || 1500;
+
+    // Build research context if available
+    let researchContext = '';
+    if (researchData && typeof researchData === 'object') {
+      const findings = (researchData as Record<string, any>).key_findings || [];
+      if (Array.isArray(findings) && findings.length > 0) {
+        researchContext = `\n\nKey Research Findings:\n${findings
+          .map(
+            (f: any) =>
+              `- ${typeof f === 'string' ? f : JSON.stringify(f)}`
+          )
+          .join('\n')}`;
+      }
+    }
+
+    // Build outline context if available
+    let outlineContext = '';
+    if (outlineData) {
+      const sections = (
+        (outlineData as Record<string, any>).sections || []
+      ).map(
+        (s: any) =>
+          `## ${typeof s === 'string' ? s : s.heading || 'Section'}\n(${(s as Record<string, any>).purpose || 'Section content'})`
+      );
+      if (sections.length > 0) {
+        outlineContext = `\n\nOutline Structure:\n${sections.join('\n\n')}`;
+      }
+    }
+
+    // Build internal links context
+    let linksContext = '';
+    if (internalLinkNotes) {
+      linksContext = `\n\nInternal Link Opportunities:\n${internalLinkNotes}`;
+    }
+
+    // Build CTA context
+    let ctaContext = '';
+    if (ctaNotes) {
+      ctaContext = `\n\nCall-to-Action Guidance:\n${ctaNotes}`;
+    }
+
+    const userMessage = `Write the first draft blog post about: ${topic}${researchContext}${outlineContext}${linksContext}${ctaContext}`;
+
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model ||
+      process.env.WRITER_AGENT_MODEL ||
+      process.env.RESEARCH_AGENT_MODEL ||
+      'gpt-5.4-mini';
+    console.log(`[v0] Writer step: Using model: ${modelName}`);
+
     // Call AI model via direct OpenAI provider
     const model = openai(modelName);
 

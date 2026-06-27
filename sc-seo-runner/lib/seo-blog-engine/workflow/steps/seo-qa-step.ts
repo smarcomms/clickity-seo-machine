@@ -4,6 +4,7 @@ import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { updateRunStatus } from '../../storage/runs';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -53,10 +54,15 @@ export interface SeoQaOutput {
     cta_present: boolean;
     cta_analysis: string;
   };
+  client_goal_alignment: {
+    score: number;
+    analysis: string;
+  };
   risk_flags: string[];
   priority_fixes: string[];
-  recommended_next_action: string;
+  recommended_next_action: 'Approve for editor' | 'Revise before editor' | 'Needs human review';
   ready_for_editor: boolean;
+  needs_review: boolean;
   timestamp: string;
 }
 
@@ -79,25 +85,45 @@ export async function runSeoQaStep(
     throw new Error('Draft markdown is required for SEO QA review');
   }
 
-  // Get model configuration
-  const modelName =
-    process.env.SEO_QA_AGENT_MODEL ||
-    process.env.RESEARCH_AGENT_MODEL ||
-    'gpt-5.4-mini';
-  console.log(`[v0] SEO QA step: Using model: ${modelName}`);
+  try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('seo_qa');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: seo_qa');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: seo_qa v${agentConfig.version}`);
 
-  // Prepare context for SEO QA review
-  const primaryKeyword = input.primary_keyword || 'primary keyword';
-  const secondaryKeywords = (input.secondary_keywords || []).join(', ') || 'secondary keywords';
-  const targetWordCount = input.target_word_count || 2000;
-  const businessName = input.business_name || 'Your Business';
-  const audienceNotes = input.audience_notes || 'Target audience not specified';
-  const brandVoice = input.brand_voice_notes || 'Professional and clear';
-  const ctaNotes = input.cta_notes || 'CTA not specified';
-  const internalLinkNotes = input.internal_link_notes || 'No internal linking strategy';
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
 
-  // Build SEO QA prompt
-  const seoQaPrompt = `You are an expert SEO content auditor. Review the following blog draft and provide a comprehensive SEO quality assessment.
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model ||
+      process.env.SEO_QA_AGENT_MODEL ||
+      process.env.RESEARCH_AGENT_MODEL ||
+      'gpt-5.4-mini';
+    console.log(`[v0] SEO QA step: Using model: ${modelName}`);
+
+    // Prepare context for SEO QA review
+    const primaryKeyword = input.primary_keyword || 'primary keyword';
+    const secondaryKeywords =
+      (input.secondary_keywords || []).join(', ') || 'secondary keywords';
+    const targetWordCount = input.target_word_count || 2000;
+    const businessName = input.business_name || 'Your Business';
+    const audienceNotes =
+      input.audience_notes || 'Target audience not specified';
+    const brandVoice = input.brand_voice_notes || 'Professional and clear';
+    const ctaNotes = input.cta_notes || 'CTA not specified';
+    const internalLinkNotes =
+      input.internal_link_notes || 'No internal linking strategy';
+
+    // Build SEO QA prompt with system prompt from DB
+    const seoQaPrompt = `${systemPrompt}
 
 BLOG DRAFT:
 ${draftMarkdown}
@@ -112,60 +138,8 @@ REVIEW CRITERIA:
 - CTA Notes: ${ctaNotes}
 - Internal Linking Strategy: ${internalLinkNotes}
 
-Provide a detailed SEO audit in the following JSON format (do NOT modify or rewrite the draft):
-{
-  "overall_score": <0-100>,
-  "search_intent_alignment": {
-    "score": <0-100>,
-    "analysis": "<analysis of how well draft aligns with search intent for the primary keyword>"
-  },
-  "primary_keyword_usage": {
-    "score": <0-100>,
-    "occurrences": <count>,
-    "placement_analysis": "<analysis of where primary keyword appears and how naturally>"
-  },
-  "secondary_keyword_usage": {
-    "score": <0-100>,
-    "keywords_covered": [<list of secondary keywords found in draft>],
-    "gaps": [<list of secondary keywords missing from draft>]
-  },
-  "heading_structure_review": {
-    "score": <0-100>,
-    "h1_present": <true/false>,
-    "h2_count": <count>,
-    "hierarchy_issues": [<list of heading hierarchy problems if any>]
-  },
-  "content_depth_review": {
-    "score": <0-100>,
-    "word_count": <actual word count>,
-    "section_coverage": "<assessment of whether all outline sections are covered>",
-    "depth_issues": [<list of sections that need more depth>]
-  },
-  "readability_review": {
-    "score": <0-100>,
-    "avg_sentence_length": <average>,
-    "flesch_kincaid_estimate": "<grade level estimate>",
-    "readability_issues": [<list of readability concerns>]
-  },
-  "internal_linking_review": {
-    "score": <0-100>,
-    "internal_links_found": <count>,
-    "internal_link_recommendations": [<list of suggested internal link placements>]
-  },
-  "cta_review": {
-    "score": <0-100>,
-    "cta_present": <true/false>,
-    "cta_analysis": "<assessment of CTA placement, clarity, and alignment with brand guidelines>"
-  },
-  "risk_flags": [<list of SEO risks like duplicate content, keyword stuffing, broken links, etc>],
-  "priority_fixes": [<list of top 3-5 priority items to fix before publication>],
-  "recommended_next_action": "<recommendation for next step - Editor, Revision, or Ready for Publishing>",
-  "ready_for_editor": <true if draft is ready for editor review, false if major revisions needed>
-}
+Provide a detailed SEO audit in JSON format (do NOT modify or rewrite the draft).`;
 
-Only output the JSON. Do not include any other text or explanation.`;
-
-  try {
     const { text } = await generateText({
       model: openai(modelName),
       prompt: seoQaPrompt,
@@ -188,14 +162,51 @@ Only output the JSON. Do not include any other text or explanation.`;
       seoQaResult = generateFallbackSeoQa(draftMarkdown, primaryKeyword);
     }
 
-    // Validate required fields
-    if (
-      typeof seoQaResult.overall_score !== 'number' ||
-      !seoQaResult.search_intent_alignment ||
-      !seoQaResult.priority_fixes
-    ) {
-      console.warn(`[v0] SEO QA step: Missing required audit fields, using fallback`);
-      seoQaResult = generateFallbackSeoQa(draftMarkdown, primaryKeyword);
+    // Runtime validation of required fields
+    const requiredFields: (keyof SeoQaOutput)[] = [
+      'overall_score',
+      'ready_for_editor',
+      'recommended_next_action',
+      'search_intent_alignment',
+      'primary_keyword_usage',
+      'secondary_keyword_usage',
+      'heading_structure_review',
+      'content_depth_review',
+      'readability_review',
+      'cta_review',
+      'internal_linking_review',
+      'client_goal_alignment',
+      'priority_fixes',
+      'risk_flags',
+      'needs_review',
+    ];
+
+    let missingFields: string[] = [];
+    for (const field of requiredFields) {
+      if (seoQaResult[field] === undefined || seoQaResult[field] === null) {
+        missingFields.push(field);
+      }
+    }
+
+    if (missingFields.length > 0) {
+      throw new Error(
+        `SEO QA output missing required fields: ${missingFields.join(', ')}`
+      );
+    }
+
+    // FAIL-LOUD: Validate controlled values for recommended_next_action
+    const validActions = ['Approve for editor', 'Revise before editor', 'Needs human review'];
+    if (!validActions.includes(seoQaResult.recommended_next_action)) {
+      throw new Error(
+        `SEO QA output invalid recommended_next_action: ${seoQaResult.recommended_next_action}`
+      );
+    }
+
+    // FAIL-LOUD: Validate numeric ranges
+    if (typeof seoQaResult.overall_score !== 'number' || seoQaResult.overall_score < 0 || seoQaResult.overall_score > 100) {
+      throw new Error(
+        `SEO QA output invalid overall_score: ${seoQaResult.overall_score}, must be number between 0-100`
+      );
     }
 
     // Persist optimized_json to database
@@ -208,7 +219,9 @@ Only output the JSON. Do not include any other text or explanation.`;
     return seoQaResult;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[v0] SEO QA step: Error during audit for run ${runId}: ${errorMsg}`);
+    console.error(
+      `[v0] SEO QA step: Error during audit for run ${runId}: ${errorMsg}`
+    );
     throw error;
   }
 }
@@ -228,8 +241,17 @@ function generateFallbackSeoQa(
     draftMarkdown.toLowerCase().match(new RegExp(primaryKeyword.toLowerCase(), 'g')) || []
   ).length;
 
+  const overallScore = 68;
+  const readyForEditor = overallScore >= 70 && h1Count > 0;
+  const recommendedAction: 'Approve for editor' | 'Revise before editor' | 'Needs human review' =
+    overallScore >= 75 && readyForEditor
+      ? 'Approve for editor'
+      : overallScore >= 60 && readyForEditor
+        ? 'Revise before editor'
+        : 'Needs human review';
+
   return {
-    overall_score: 68,
+    overall_score: overallScore,
     search_intent_alignment: {
       score: 65,
       analysis: 'Draft covers basic search intent but may need refinement',
@@ -272,14 +294,19 @@ function generateFallbackSeoQa(
       cta_present: draftMarkdown.toLowerCase().includes('cta') || draftMarkdown.toLowerCase().includes('call'),
       cta_analysis: 'CTA section review needed',
     },
+    client_goal_alignment: {
+      score: 70,
+      analysis: 'Draft aligns with provided client goals and audience targeting',
+    },
     risk_flags: [],
     priority_fixes: [
       ...(h1Count === 0 ? ['Ensure H1 heading present'] : []),
       ...(wordCount < 1500 ? ['Expand content to meet word count target'] : []),
       ...(internalLinkCount === 0 ? ['Add internal linking strategy'] : []),
     ],
-    recommended_next_action: 'Send to editor for review and optimization',
-    ready_for_editor: true,
+    recommended_next_action: recommendedAction,
+    ready_for_editor: readyForEditor,
+    needs_review: overallScore < 70,
     timestamp: new Date().toISOString(),
   };
 }

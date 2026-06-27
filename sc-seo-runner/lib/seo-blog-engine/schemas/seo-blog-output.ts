@@ -32,6 +32,10 @@ export interface SeoBlogRun {
   final_output_json?: Record<string, unknown>;
   error_message?: string;
   callback_url?: string;
+  callback_attempted_at?: Date;
+  callback_status?: 'not_configured' | 'success' | 'failed';
+  callback_response_status?: number;
+  callback_error?: string;
   created_at: Date;
   updated_at: Date;
   completed_at?: Date;

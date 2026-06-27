@@ -134,6 +134,30 @@ function getStageField(status: RunStatus): string | null {
 }
 
 /**
+ * Record callback attempt in database
+ */
+export async function recordCallbackAttempt(
+  runId: string,
+  status: 'success' | 'failed' | 'not_configured',
+  responseStatus?: number,
+  errorMessage?: string
+): Promise<SeoBlogRun> {
+  const result = await query(
+    `UPDATE seo_blog_runs 
+    SET callback_attempted_at = NOW(), 
+        callback_status = $2,
+        callback_response_status = $3,
+        callback_error = $4,
+        updated_at = NOW()
+    WHERE id = $1
+    RETURNING *`,
+    [runId, status, responseStatus || null, errorMessage || null]
+  );
+
+  return parseRunRow(result.rows[0]);
+}
+
+/**
  * Parse database row to SeoBlogRun type
  */
 export function parseRunRow(row: any): SeoBlogRun {
@@ -148,6 +172,10 @@ export function parseRunRow(row: any): SeoBlogRun {
     final_output_json: row.final_output_json,
     error_message: row.error_message,
     callback_url: row.callback_url,
+    callback_attempted_at: row.callback_attempted_at ? new Date(row.callback_attempted_at) : undefined,
+    callback_status: row.callback_status,
+    callback_response_status: row.callback_response_status,
+    callback_error: row.callback_error,
     created_at: new Date(row.created_at),
     updated_at: new Date(row.updated_at),
     completed_at: row.completed_at ? new Date(row.completed_at) : undefined,

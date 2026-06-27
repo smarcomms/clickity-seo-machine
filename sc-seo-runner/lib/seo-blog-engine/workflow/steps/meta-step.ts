@@ -3,6 +3,7 @@
 import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -11,17 +12,25 @@ import type { SeoQaOutput } from './seo-qa-step';
 import type { EditorOutput } from './editor-step';
 
 export interface MetaOutput {
-  seo_title: string;
+  meta_title: string;
   meta_description: string;
-  suggested_slug: string;
-  primary_keyword: string;
-  secondary_keywords_used: string[];
-  excerpt: string;
-  og_title: string;
-  og_description: string;
-  canonical_url_suggestion: string;
-  schema_type_suggestion: string;
-  human_review_notes: string[];
+  slug: string;
+  social_preview: {
+    title: string;
+    description: string;
+  };
+  schema_markup: {
+    '@type': string;
+    headline: string;
+    description: string;
+  };
+  primary_keyword_used: boolean;
+  secondary_keywords_reflected: string[];
+  client_goal_reflected: boolean;
+  human_review_required: boolean;
+  review_ready: boolean;
+  meta_notes: string[];
+  needs_review: boolean;
 }
 
 /**
@@ -42,6 +51,21 @@ export async function runMetaStep(
   console.log(`[v0] Meta step: Starting for run ${runId}`);
 
   try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('meta');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: meta');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: meta v${agentConfig.version}`);
+
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
     // Build context for meta generation
     const metaContext = buildMetaContext(
       input,
@@ -52,13 +76,15 @@ export async function runMetaStep(
       editedDraft
     );
 
-    // Get model name from environment or use default
-    const modelName = process.env.META_AGENT_MODEL || 'gpt-5.4-mini';
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model || process.env.META_AGENT_MODEL || 'gpt-5.4-mini';
     console.log(`[v0] Meta step: Using model: ${modelName}`);
 
     // Generate metadata
     const { text: metaAnalysis } = await generateText({
       model: openai(modelName),
+      system: systemPrompt,
       temperature: 0.5,
       messages: [
         {
@@ -87,27 +113,49 @@ export async function runMetaStep(
       metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
     }
 
-    // Validate required fields
-    const requiredFields: (keyof MetaOutput)[] = [
-      'seo_title',
-      'meta_description',
-      'suggested_slug',
-      'primary_keyword',
-      'secondary_keywords_used',
-      'excerpt',
-      'og_title',
-      'og_description',
-      'canonical_url_suggestion',
-      'schema_type_suggestion',
-      'human_review_notes',
+    // FAIL-LOUD: Validate all required fields exist and have correct types
+    const fieldValidations: Array<{ field: keyof MetaOutput; type: string; check: (v: any) => boolean }> = [
+      { field: 'meta_title', type: 'string', check: (v) => typeof v === 'string' && v.length > 0 },
+      { field: 'meta_description', type: 'string', check: (v) => typeof v === 'string' && v.length > 0 },
+      { field: 'slug', type: 'string', check: (v) => typeof v === 'string' && v.length > 0 },
+      { field: 'social_preview', type: 'object', check: (v) => typeof v === 'object' && v.title && v.description },
+      { field: 'schema_markup', type: 'object', check: (v) => typeof v === 'object' && v['@type'] && v.headline && v.description },
+      { field: 'primary_keyword_used', type: 'boolean', check: (v) => typeof v === 'boolean' },
+      { field: 'secondary_keywords_reflected', type: 'array', check: (v) => Array.isArray(v) },
+      { field: 'client_goal_reflected', type: 'boolean', check: (v) => typeof v === 'boolean' },
+      { field: 'human_review_required', type: 'boolean', check: (v) => typeof v === 'boolean' },
+      { field: 'review_ready', type: 'boolean', check: (v) => typeof v === 'boolean' },
+      { field: 'meta_notes', type: 'array', check: (v) => Array.isArray(v) },
+      { field: 'needs_review', type: 'boolean', check: (v) => typeof v === 'boolean' },
     ];
 
-    for (const field of requiredFields) {
-      if (metaOutput[field] === undefined || metaOutput[field] === null) {
-        console.warn(`[v0] Meta step: Missing field ${field}, using fallback`);
-        metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
-        break;
+    const validationErrors: string[] = [];
+    for (const validation of fieldValidations) {
+      const value = metaOutput[validation.field];
+      if (value === undefined || value === null) {
+        validationErrors.push(`${validation.field} is missing`);
+      } else if (!validation.check(value)) {
+        validationErrors.push(`${validation.field} has invalid type (expected ${validation.type})`);
       }
+    }
+
+    if (validationErrors.length > 0) {
+      throw new Error(
+        `Meta output validation failed: ${validationErrors.join('; ')}`
+      );
+    }
+
+    // Lightweight field constraints (no silent modification)
+    if ((metaOutput.meta_title as string).length > 70) {
+      throw new Error(
+        `Meta title too long: ${metaOutput.meta_title.length} chars, max 70`
+      );
+    }
+
+    if ((metaOutput.meta_description as string).length > 160) {
+      throw new Error(
+        `Meta description too long: ${metaOutput.meta_description.length} chars, max 160`
+      );
     }
 
     console.log(
@@ -133,8 +181,14 @@ function buildMetaContext(
   originalDraft: string,
   editedDraft: string
 ): string {
+  // Validate required research.key_findings before using
+  if (!Array.isArray(research.key_findings)) {
+    throw new Error('Research output missing required key_findings array for meta-step');
+  }
+
   const wordCount = editedDraft.split(/\s+/).length;
   const headings = editedDraft.match(/^#+\s+.+$/gm) || [];
+  const keyFindingsSummary = research.key_findings.slice(0, 3).join('\n- ');
 
   return `You are an expert SEO metadata specialist. Generate SEO metadata for a blog post for human review.
 
@@ -146,7 +200,7 @@ SECONDARY KEYWORDS: ${(input.secondary_keywords || []).join(', ') || 'None provi
 TARGET AUDIENCE: ${input.audience_notes || 'General audience'}
 
 RESEARCH SUMMARY:
-${research.key_findings.slice(0, 3).join('\n')}
+- ${keyFindingsSummary}
 
 OUTLINE STRUCTURE:
 ${outline.sections.map((s) => `- ${s.heading} (${s.subsections?.length || 0} subsections)`).join('\n')}
@@ -204,24 +258,29 @@ function generateFallbackMeta(
   const wordCount = draft.split(/\s+/).length;
 
   return {
-    seo_title: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
-    meta_description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies. ${wordCount} words.`,
-    suggested_slug: slug,
-    primary_keyword: primaryKeyword,
-    secondary_keywords_used: input.secondary_keywords || [],
-    excerpt: `Learn about ${input.blog_topic.toLowerCase()} with insights from our research. ${wordCount}-word guide covering key aspects and strategies.`,
-    og_title: `${input.blog_topic} | ${input.business_name || 'Blog'}`,
-    og_description: `Discover ${input.blog_topic.toLowerCase()}. Comprehensive guide with research and insights.`,
-    canonical_url_suggestion: input.website_url
-      ? `${input.website_url}/blog/${slug}`
-      : null,
-    schema_type_suggestion: 'BlogPosting',
-    human_review_notes: [
+    meta_title: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
+    meta_description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies.`,
+    slug: slug,
+    social_preview: {
+      title: `${input.blog_topic} | ${input.business_name || 'Blog'}`,
+      description: `Discover ${input.blog_topic.toLowerCase()}. Comprehensive guide with research and insights.`,
+    },
+    schema_markup: {
+      '@type': 'BlogPosting',
+      headline: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
+      description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies.`,
+    },
+    primary_keyword_used: true,
+    secondary_keywords_reflected: input.secondary_keywords || [],
+    client_goal_reflected: true,
+    human_review_required: seoQa.overall_score < 75,
+    review_ready: seoQa.overall_score >= 60,
+    meta_notes: [
       `Overall SEO Score: ${seoQa.overall_score}`,
       'Review and adjust metadata as needed for your brand voice',
-      'Ensure SEO title and meta description are compelling for CTR',
-      'Verify canonical URL matches your site structure',
-      'Check that schema type matches your content format',
+      'Ensure meta title and description are compelling for CTR',
+      'Verify schema markup matches your content format',
     ],
+    needs_review: seoQa.overall_score < 75,
   };
 }

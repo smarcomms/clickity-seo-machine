@@ -4,6 +4,7 @@ import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { updateRunStatus } from '../../storage/runs';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 
 export interface Section {
@@ -40,25 +41,40 @@ export async function runOutlineStep(
 ): Promise<OutlineOutput> {
   console.log(`[v0] Outline step: Creating outline for run ${runId}`);
 
-  // Get model configuration
-  const modelName = process.env.OUTLINE_AGENT_MODEL || process.env.RESEARCH_AGENT_MODEL || 'gpt-5.4-mini';
-  console.log(`[v0] Outline step: Using model: ${modelName}`);
-
-  // Create context from available data
+  // Create context from available data (needed for fallback in catch block)
   const topic = input.blog_topic || input.topic || 'Your Topic';
   const primaryKeyword = input.primary_keyword || 'primary keyword';
-  const secondaryKeywords = (input.secondary_keywords || input.keywords || []).join(', ') || 'secondary keywords';
+  const secondaryKeywords =
+    (input.secondary_keywords || input.keywords || []).join(', ') ||
+    'secondary keywords';
   const businessName = input.business_name || 'Your Business';
-  const audienceNotes = input.audience_notes || 'Target audience not specified';
+  const audienceNotes =
+    input.audience_notes || 'Target audience not specified';
   const brandVoice = input.brand_voice_notes || 'Professional and clear';
   const ctaNotes = input.cta_notes || 'Encourage engagement';
   const additionalNotes = input.additional_order_notes || 'No additional notes';
   const targetWordCount = input.target_word_count || 1500;
 
-  // Include research insights if available
-  let researchContext = '';
-  if (researchData) {
-    researchContext = `
+  try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('outline');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: outline');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: outline v${agentConfig.version}`);
+
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    // Include research insights if available
+    let researchContext = '';
+    if (researchData) {
+      researchContext = `
 
 Research Insights from Research Agent:
 - Search Intent: ${researchData.search_intent || 'N/A'}
@@ -66,42 +82,9 @@ Research Insights from Research Agent:
 - Target Audience: ${researchData.target_audience_summary || 'N/A'}
 - Recommended Sections: ${researchData.recommended_sections?.join(', ') || 'N/A'}
 - Questions to Answer: ${researchData.questions_to_answer?.join(', ') || 'N/A'}`;
-  }
-
-  const systemPrompt = `You are a professional content outline specialist. Create a detailed, well-structured blog outline that will guide content writers.
-
-Your output must be valid JSON matching this exact structure:
-{
-  "title": "string (SEO-optimized title including primary keyword)",
-  "meta_angle": "string (unique angle that differentiates this article)",
-  "target_word_count": number,
-  "sections": [
-    {
-      "heading": "string",
-      "purpose": "string (why this section matters)",
-      "estimated_words": number,
-      "key_points": ["string"],
-      "seo_notes": ["string (SEO best practices for this section)"]
     }
-  ],
-  "intro_guidance": "string (guidance for introduction paragraph)",
-  "conclusion_guidance": "string (guidance for conclusion paragraph)",
-  "cta_guidance": "string (call-to-action guidance)",
-  "internal_link_opportunities": ["string (suggested internal links)"],
-  "notes_for_writer": ["string (additional guidance for writer)"]
-}
 
-Ensure:
-- Sections total approximately the target word count
-- Each section includes specific key points to cover
-- SEO best practices are integrated
-- The outline flows logically
-- Internal linking opportunities are realistic
-- The outline is actionable for a writer
-
-Respond ONLY with valid JSON, no markdown or explanations.`;
-
-  const userMessage = `Create an outline for this article:
+    const userMessage = `Create an outline for this article:
 
 Topic: ${topic}
 Business: ${businessName}
@@ -121,7 +104,14 @@ ${ctaNotes}
 Additional Requirements:
 ${additionalNotes}${researchContext}`;
 
-  try {
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model ||
+      process.env.OUTLINE_AGENT_MODEL ||
+      process.env.RESEARCH_AGENT_MODEL ||
+      'gpt-5.4-mini';
+    console.log(`[v0] Outline step: Using model: ${modelName}`);
+
     // Use direct OpenAI provider
     const model = openai(modelName);
 
@@ -133,7 +123,9 @@ ${additionalNotes}${researchContext}`;
       temperature: 0.7,
     });
 
-    console.log(`[v0] Outline step: Raw response length: ${response.text.length}`);
+    console.log(
+      `[v0] Outline step: Raw response length: ${response.text.length}`
+    );
 
     // Parse the JSON response
     const outlineData = JSON.parse(response.text) as OutlineOutput;
@@ -169,14 +161,19 @@ ${additionalNotes}${researchContext}`;
       ];
     }
 
-    console.log(`[v0] Outline step: Generated outline with ${outlineData.sections.length} sections`);
+    console.log(
+      `[v0] Outline step: Generated outline with ${outlineData.sections.length} sections`
+    );
     // Persist outline_json to database
     console.log(`[v0] Outline step: Persisting outline_json for run ${runId}`);
     await updateRunStatus(runId, 'outlining', outlineData);
 
     return outlineData;
   } catch (error) {
-    console.error(`[v0] Outline step error:`, error instanceof Error ? error.message : String(error));
+    console.error(
+      `[v0] Outline step error:`,
+      error instanceof Error ? error.message : String(error)
+    );
 
     // Return fallback outline if parsing or AI call fails
     const fallbackOutline: OutlineOutput = {
