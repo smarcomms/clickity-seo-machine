@@ -91,6 +91,14 @@ Provide comprehensive research findings in JSON format.`;
         throw new Error('No JSON found in response');
       }
       researchData = JSON.parse(jsonMatch[0]);
+      
+      // Validate required fields at runtime
+      if (!Array.isArray(researchData.key_findings)) {
+        throw new Error('Research output missing required key_findings array');
+      }
+      if (researchData.key_findings.length === 0) {
+        throw new Error('Research output key_findings array cannot be empty');
+      }
     } catch (parseErr) {
       console.error(
         `[v0] Research step: Failed to parse AI response:`,

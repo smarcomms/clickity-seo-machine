@@ -1,7 +1,7 @@
 'use step';
 
 import 'server-only';
-import { getRun } from '../../storage/runs';
+import { getRun, recordCallbackAttempt } from '../../storage/runs';
 
 /**
  * Send callback notification to webhook URL
@@ -19,6 +19,8 @@ export async function sendCallbackStep(runId: string): Promise<void> {
 
     if (!run.callback_url) {
       console.log(`[v0] Callback: No callback URL for run ${runId}`);
+      // Record that callback was not configured
+      await recordCallbackAttempt(runId, 'not_configured');
       return;
     }
 
@@ -41,29 +43,36 @@ export async function sendCallbackStep(runId: string): Promise<void> {
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
+      if (response.ok) {
+        console.log(`[v0] Callback: Successfully sent for run ${runId}, status ${response.status}`);
+        // Record successful callback
+        await recordCallbackAttempt(runId, 'success', response.status);
+      } else {
+        const statusText = response.statusText || `HTTP ${response.status}`;
         console.warn(
           `[v0] Callback: Webhook returned ${response.status} for run ${runId}`
         );
-      } else {
-        console.log(`[v0] Callback: Successfully sent for run ${runId}`);
+        // Record failed callback with HTTP status
+        const errorMsg = `Webhook returned ${response.status}: ${statusText}`;
+        await recordCallbackAttempt(runId, 'failed', response.status, errorMsg);
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
 
+      let errorMessage = 'Unknown network error';
       if (fetchError instanceof Error) {
         if (fetchError.name === 'AbortError') {
-          console.warn(
-            `[v0] Callback: Request timeout (30s) for run ${runId}`
-          );
+          errorMessage = 'Request timeout (30s)';
+          console.warn(`[v0] Callback: Request timeout (30s) for run ${runId}`);
         } else {
-          console.warn(
-            `[v0] Callback: Network error for run ${runId}: ${fetchError.message}`
-          );
+          errorMessage = `Network error: ${fetchError.message}`;
+          console.warn(`[v0] Callback: ${errorMessage} for run ${runId}`);
         }
       } else {
         console.warn(`[v0] Callback: Unknown error for run ${runId}`);
       }
+      // Record failed callback with error message (no HTTP status for network errors)
+      await recordCallbackAttempt(runId, 'failed', undefined, errorMessage);
       // Don't throw - callback failure should not fail the workflow
     }
   } catch (error) {

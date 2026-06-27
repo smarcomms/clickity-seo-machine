@@ -162,16 +162,64 @@ Provide a detailed SEO audit in JSON format (do NOT modify or rewrite the draft)
       seoQaResult = generateFallbackSeoQa(draftMarkdown, primaryKeyword);
     }
 
-    // Validate required fields
-    if (
-      typeof seoQaResult.overall_score !== 'number' ||
-      !seoQaResult.search_intent_alignment ||
-      !seoQaResult.priority_fixes
-    ) {
+    // Runtime validation of required fields
+    const requiredFields: (keyof SeoQaOutput)[] = [
+      'overall_score',
+      'ready_for_editor',
+      'recommended_next_action',
+      'search_intent_alignment',
+      'primary_keyword_usage',
+      'secondary_keyword_usage',
+      'heading_structure_review',
+      'content_depth_review',
+      'readability_review',
+      'cta_review',
+      'internal_linking_review',
+      'client_goal_alignment',
+      'priority_fixes',
+      'risk_flags',
+      'needs_review',
+    ];
+
+    let missingFields: string[] = [];
+    for (const field of requiredFields) {
+      if (seoQaResult[field] === undefined || seoQaResult[field] === null) {
+        missingFields.push(field);
+      }
+    }
+
+    if (missingFields.length > 0) {
       console.warn(
-        `[v0] SEO QA step: Missing required audit fields, using fallback`
+        `[v0] SEO QA step: Missing required fields: ${missingFields.join(', ')}, using fallback`
       );
       seoQaResult = generateFallbackSeoQa(draftMarkdown, primaryKeyword);
+    }
+
+    // Validate controlled values for recommended_next_action
+    const validActions = ['Approve for editor', 'Revise before editor', 'Needs human review'];
+    if (!validActions.includes(seoQaResult.recommended_next_action)) {
+      const invalidValue = seoQaResult.recommended_next_action;
+      console.warn(
+        `[v0] SEO QA step: Invalid recommended_next_action: ${invalidValue}. Valid values are: ${validActions.join(', ')}`
+      );
+      // Map to appropriate value based on score
+      seoQaResult.recommended_next_action =
+        seoQaResult.overall_score >= 75
+          ? 'Approve for editor'
+          : seoQaResult.overall_score >= 60
+            ? 'Revise before editor'
+            : 'Needs human review';
+      console.log(
+        `[v0] SEO QA step: Corrected recommended_next_action to: ${seoQaResult.recommended_next_action}`
+      );
+    }
+
+    // Validate numeric ranges
+    if (typeof seoQaResult.overall_score !== 'number' || seoQaResult.overall_score < 0 || seoQaResult.overall_score > 100) {
+      console.warn(
+        `[v0] SEO QA step: Invalid overall_score: ${seoQaResult.overall_score}, must be 0-100`
+      );
+      seoQaResult.overall_score = Math.max(0, Math.min(100, seoQaResult.overall_score || 0));
     }
 
     // Persist optimized_json to database

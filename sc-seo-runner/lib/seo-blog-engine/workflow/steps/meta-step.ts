@@ -105,7 +105,7 @@ export async function runMetaStep(
       metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
     }
 
-    // Validate required fields
+    // Validate required fields at runtime
     const requiredFields: (keyof MetaOutput)[] = [
       'seo_title',
       'meta_description',
@@ -120,12 +120,50 @@ export async function runMetaStep(
       'human_review_notes',
     ];
 
+    let missingFields: string[] = [];
     for (const field of requiredFields) {
       if (metaOutput[field] === undefined || metaOutput[field] === null) {
-        console.warn(`[v0] Meta step: Missing field ${field}, using fallback`);
-        metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
-        break;
+        missingFields.push(field);
       }
+    }
+
+    if (missingFields.length > 0) {
+      console.warn(
+        `[v0] Meta step: Missing required fields: ${missingFields.join(', ')}, using fallback`
+      );
+      metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
+    }
+
+    // Validate field constraints
+    if (metaOutput.seo_title && metaOutput.seo_title.length > 70) {
+      console.warn(
+        `[v0] Meta step: SEO title too long (${metaOutput.seo_title.length} chars, max 70), truncating`
+      );
+      metaOutput.seo_title = metaOutput.seo_title.substring(0, 67) + '...';
+    }
+
+    if (metaOutput.meta_description && metaOutput.meta_description.length > 160) {
+      console.warn(
+        `[v0] Meta step: Meta description too long (${metaOutput.meta_description.length} chars, max 160), truncating`
+      );
+      metaOutput.meta_description = metaOutput.meta_description.substring(0, 157) + '...';
+    }
+
+    if (!Array.isArray(metaOutput.secondary_keywords_used)) {
+      console.warn(
+        `[v0] Meta step: secondary_keywords_used is not an array, using empty array`
+      );
+      metaOutput.secondary_keywords_used = [];
+    }
+
+    if (!Array.isArray(metaOutput.human_review_notes)) {
+      console.warn(
+        `[v0] Meta step: human_review_notes is not an array, using default notes`
+      );
+      metaOutput.human_review_notes = [
+        'Review SEO title and meta description for CTR',
+        'Verify metadata aligns with content',
+      ];
     }
 
     console.log(
