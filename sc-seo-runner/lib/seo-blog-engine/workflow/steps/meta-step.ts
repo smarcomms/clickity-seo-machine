@@ -106,18 +106,12 @@ export async function runMetaStep(
       }
       metaOutput = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
-      // In production, fail loud. Only use fallback in mock/test mode.
-      const isTestMode = input.test_run === true || input.debug_marker !== undefined;
+      // PRODUCTION MODE: Always fail loud on parse errors.
+      // Fallback is not used in normal workflow - this ensures AI model schema compliance.
       const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-      
-      if (isTestMode) {
-        console.warn(`[v0] Meta step: Parse failed in test mode, using fallback: ${errorMsg}`);
-        metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
-      } else {
-        const fullError = `Meta output parse failed: ${errorMsg}`;
-        console.error(`[v0] Meta step: ${fullError}`);
-        throw new Error(fullError);
-      }
+      const fullError = `Meta output parse failed: ${errorMsg}`;
+      console.error(`[v0] Meta step: ${fullError}`);
+      throw new Error(fullError);
     }
 
     // FAIL-LOUD: Validate all required fields exist and have correct types
