@@ -96,21 +96,28 @@ export async function runMetaStep(
 
     console.log(`[v0] Meta step: Received analysis, parsing JSON`);
 
-    // Parse the response
+    // Parse the response - FAIL-LOUD in production
     let metaOutput: MetaOutput;
     try {
       // Extract JSON from response (may have surrounding text)
       const jsonMatch = metaAnalysis.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error('No JSON found in response');
+        throw new Error('Meta output parse failed: No JSON found in response');
       }
       metaOutput = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
-      console.warn(
-        `[v0] Meta step: Failed to parse JSON response, using fallback`,
-        parseError instanceof Error ? parseError.message : String(parseError)
-      );
-      metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
+      // In production, fail loud. Only use fallback in mock/test mode.
+      const isTestMode = input.test_run === true || input.debug_marker !== undefined;
+      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+      
+      if (isTestMode) {
+        console.warn(`[v0] Meta step: Parse failed in test mode, using fallback: ${errorMsg}`);
+        metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
+      } else {
+        const fullError = `Meta output parse failed: ${errorMsg}`;
+        console.error(`[v0] Meta step: ${fullError}`);
+        throw new Error(fullError);
+      }
     }
 
     // FAIL-LOUD: Validate all required fields exist and have correct types
@@ -207,9 +214,10 @@ ${outline.sections.map((s) => `- ${s.heading} (${s.subsections?.length || 0} sub
 
 SEO QA REVIEW:
 - Overall Score: ${seoQa.overall_score}
-- Search Intent Alignment: ${seoQa.search_intent_alignment}
-- Keyword Usage: ${seoQa.keyword_usage_assessment}
-- Heading Structure: ${seoQa.heading_structure_assessment}
+- Search Intent Alignment: ${seoQa.search_intent_alignment.score}
+- Primary Keyword Usage: ${seoQa.primary_keyword_usage.score}
+- Heading Structure: ${seoQa.heading_structure_review.score}
+- Client Goal Alignment: ${seoQa.client_goal_alignment.score}
 
 CONTENT STATS:
 - Word Count: ${wordCount}
