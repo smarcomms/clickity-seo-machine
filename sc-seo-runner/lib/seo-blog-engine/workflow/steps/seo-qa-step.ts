@@ -4,6 +4,7 @@ import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { updateRunStatus } from '../../storage/runs';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -79,25 +80,45 @@ export async function runSeoQaStep(
     throw new Error('Draft markdown is required for SEO QA review');
   }
 
-  // Get model configuration
-  const modelName =
-    process.env.SEO_QA_AGENT_MODEL ||
-    process.env.RESEARCH_AGENT_MODEL ||
-    'gpt-5.4-mini';
-  console.log(`[v0] SEO QA step: Using model: ${modelName}`);
+  try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('seo_qa');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: seo_qa');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: seo_qa v${agentConfig.version}`);
 
-  // Prepare context for SEO QA review
-  const primaryKeyword = input.primary_keyword || 'primary keyword';
-  const secondaryKeywords = (input.secondary_keywords || []).join(', ') || 'secondary keywords';
-  const targetWordCount = input.target_word_count || 2000;
-  const businessName = input.business_name || 'Your Business';
-  const audienceNotes = input.audience_notes || 'Target audience not specified';
-  const brandVoice = input.brand_voice_notes || 'Professional and clear';
-  const ctaNotes = input.cta_notes || 'CTA not specified';
-  const internalLinkNotes = input.internal_link_notes || 'No internal linking strategy';
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
 
-  // Build SEO QA prompt
-  const seoQaPrompt = `You are an expert SEO content auditor. Review the following blog draft and provide a comprehensive SEO quality assessment.
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model ||
+      process.env.SEO_QA_AGENT_MODEL ||
+      process.env.RESEARCH_AGENT_MODEL ||
+      'gpt-5.4-mini';
+    console.log(`[v0] SEO QA step: Using model: ${modelName}`);
+
+    // Prepare context for SEO QA review
+    const primaryKeyword = input.primary_keyword || 'primary keyword';
+    const secondaryKeywords =
+      (input.secondary_keywords || []).join(', ') || 'secondary keywords';
+    const targetWordCount = input.target_word_count || 2000;
+    const businessName = input.business_name || 'Your Business';
+    const audienceNotes =
+      input.audience_notes || 'Target audience not specified';
+    const brandVoice = input.brand_voice_notes || 'Professional and clear';
+    const ctaNotes = input.cta_notes || 'CTA not specified';
+    const internalLinkNotes =
+      input.internal_link_notes || 'No internal linking strategy';
+
+    // Build SEO QA prompt with system prompt from DB
+    const seoQaPrompt = `${systemPrompt}
 
 BLOG DRAFT:
 ${draftMarkdown}
@@ -112,60 +133,8 @@ REVIEW CRITERIA:
 - CTA Notes: ${ctaNotes}
 - Internal Linking Strategy: ${internalLinkNotes}
 
-Provide a detailed SEO audit in the following JSON format (do NOT modify or rewrite the draft):
-{
-  "overall_score": <0-100>,
-  "search_intent_alignment": {
-    "score": <0-100>,
-    "analysis": "<analysis of how well draft aligns with search intent for the primary keyword>"
-  },
-  "primary_keyword_usage": {
-    "score": <0-100>,
-    "occurrences": <count>,
-    "placement_analysis": "<analysis of where primary keyword appears and how naturally>"
-  },
-  "secondary_keyword_usage": {
-    "score": <0-100>,
-    "keywords_covered": [<list of secondary keywords found in draft>],
-    "gaps": [<list of secondary keywords missing from draft>]
-  },
-  "heading_structure_review": {
-    "score": <0-100>,
-    "h1_present": <true/false>,
-    "h2_count": <count>,
-    "hierarchy_issues": [<list of heading hierarchy problems if any>]
-  },
-  "content_depth_review": {
-    "score": <0-100>,
-    "word_count": <actual word count>,
-    "section_coverage": "<assessment of whether all outline sections are covered>",
-    "depth_issues": [<list of sections that need more depth>]
-  },
-  "readability_review": {
-    "score": <0-100>,
-    "avg_sentence_length": <average>,
-    "flesch_kincaid_estimate": "<grade level estimate>",
-    "readability_issues": [<list of readability concerns>]
-  },
-  "internal_linking_review": {
-    "score": <0-100>,
-    "internal_links_found": <count>,
-    "internal_link_recommendations": [<list of suggested internal link placements>]
-  },
-  "cta_review": {
-    "score": <0-100>,
-    "cta_present": <true/false>,
-    "cta_analysis": "<assessment of CTA placement, clarity, and alignment with brand guidelines>"
-  },
-  "risk_flags": [<list of SEO risks like duplicate content, keyword stuffing, broken links, etc>],
-  "priority_fixes": [<list of top 3-5 priority items to fix before publication>],
-  "recommended_next_action": "<recommendation for next step - Editor, Revision, or Ready for Publishing>",
-  "ready_for_editor": <true if draft is ready for editor review, false if major revisions needed>
-}
+Provide a detailed SEO audit in JSON format (do NOT modify or rewrite the draft).`;
 
-Only output the JSON. Do not include any other text or explanation.`;
-
-  try {
     const { text } = await generateText({
       model: openai(modelName),
       prompt: seoQaPrompt,
@@ -194,7 +163,9 @@ Only output the JSON. Do not include any other text or explanation.`;
       !seoQaResult.search_intent_alignment ||
       !seoQaResult.priority_fixes
     ) {
-      console.warn(`[v0] SEO QA step: Missing required audit fields, using fallback`);
+      console.warn(
+        `[v0] SEO QA step: Missing required audit fields, using fallback`
+      );
       seoQaResult = generateFallbackSeoQa(draftMarkdown, primaryKeyword);
     }
 
@@ -208,7 +179,9 @@ Only output the JSON. Do not include any other text or explanation.`;
     return seoQaResult;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[v0] SEO QA step: Error during audit for run ${runId}: ${errorMsg}`);
+    console.error(
+      `[v0] SEO QA step: Error during audit for run ${runId}: ${errorMsg}`
+    );
     throw error;
   }
 }

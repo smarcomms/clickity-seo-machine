@@ -3,6 +3,7 @@
 import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -42,6 +43,21 @@ export async function runMetaStep(
   console.log(`[v0] Meta step: Starting for run ${runId}`);
 
   try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('meta');
+    if (!agentConfig) {
+      throw new Error('Active agent config not found for agent_key: meta');
+    }
+    console.log(`[v0] SEO Blog Agent Config Loaded: meta v${agentConfig.version}`);
+
+    // Build system prompt from database config
+    const systemPrompt = [
+      agentConfig.system_prompt,
+      agentConfig.skill_markdown,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
     // Build context for meta generation
     const metaContext = buildMetaContext(
       input,
@@ -52,13 +68,15 @@ export async function runMetaStep(
       editedDraft
     );
 
-    // Get model name from environment or use default
-    const modelName = process.env.META_AGENT_MODEL || 'gpt-5.4-mini';
+    // Get model name: use DB config if available, otherwise fall back to env var or default
+    const modelName =
+      agentConfig.model || process.env.META_AGENT_MODEL || 'gpt-5.4-mini';
     console.log(`[v0] Meta step: Using model: ${modelName}`);
 
     // Generate metadata
     const { text: metaAnalysis } = await generateText({
       model: openai(modelName),
+      system: systemPrompt,
       temperature: 0.5,
       messages: [
         {
