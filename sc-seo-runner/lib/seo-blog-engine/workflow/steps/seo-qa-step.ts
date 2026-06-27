@@ -189,37 +189,24 @@ Provide a detailed SEO audit in JSON format (do NOT modify or rewrite the draft)
     }
 
     if (missingFields.length > 0) {
-      console.warn(
-        `[v0] SEO QA step: Missing required fields: ${missingFields.join(', ')}, using fallback`
+      throw new Error(
+        `SEO QA output missing required fields: ${missingFields.join(', ')}`
       );
-      seoQaResult = generateFallbackSeoQa(draftMarkdown, primaryKeyword);
     }
 
-    // Validate controlled values for recommended_next_action
+    // FAIL-LOUD: Validate controlled values for recommended_next_action
     const validActions = ['Approve for editor', 'Revise before editor', 'Needs human review'];
     if (!validActions.includes(seoQaResult.recommended_next_action)) {
-      const invalidValue = seoQaResult.recommended_next_action;
-      console.warn(
-        `[v0] SEO QA step: Invalid recommended_next_action: ${invalidValue}. Valid values are: ${validActions.join(', ')}`
-      );
-      // Map to appropriate value based on score
-      seoQaResult.recommended_next_action =
-        seoQaResult.overall_score >= 75
-          ? 'Approve for editor'
-          : seoQaResult.overall_score >= 60
-            ? 'Revise before editor'
-            : 'Needs human review';
-      console.log(
-        `[v0] SEO QA step: Corrected recommended_next_action to: ${seoQaResult.recommended_next_action}`
+      throw new Error(
+        `SEO QA output invalid recommended_next_action: ${seoQaResult.recommended_next_action}`
       );
     }
 
-    // Validate numeric ranges
+    // FAIL-LOUD: Validate numeric ranges
     if (typeof seoQaResult.overall_score !== 'number' || seoQaResult.overall_score < 0 || seoQaResult.overall_score > 100) {
-      console.warn(
-        `[v0] SEO QA step: Invalid overall_score: ${seoQaResult.overall_score}, must be 0-100`
+      throw new Error(
+        `SEO QA output invalid overall_score: ${seoQaResult.overall_score}, must be number between 0-100`
       );
-      seoQaResult.overall_score = Math.max(0, Math.min(100, seoQaResult.overall_score || 0));
     }
 
     // Persist optimized_json to database
