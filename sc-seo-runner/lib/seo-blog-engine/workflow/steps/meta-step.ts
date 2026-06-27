@@ -160,7 +160,7 @@ export async function runMetaStep(
 
     console.log(
       `[v0] Meta step: Complete for run ${runId}`,
-      `Generated metadata: ${metaOutput.seo_title.substring(0, 50)}...`
+      `Generated metadata: ${metaOutput.meta_title.substring(0, 50)}...`
     );
     return metaOutput;
   } catch (error) {
@@ -222,22 +222,36 @@ Generate metadata that:
 2. Includes the primary keyword naturally in title and description
 3. Is SEO-optimized for search engines
 4. Is compelling for human readers and CTR
-5. Follows best practices (title max 60 chars, description max 160 chars)
+5. Follows best practices (title max 70 chars, description max 160 chars)
 6. Includes review notes for the human editor
 
-Return a JSON object with these exact fields:
+Return valid JSON only using exactly these top-level keys:
+meta_title, meta_description, slug, social_preview, schema_markup, primary_keyword_used, secondary_keywords_reflected, client_goal_reflected, human_review_required, review_ready, meta_notes, needs_review.
+
+Do not use old keys:
+seo_title, suggested_slug, secondary_keywords_used, human_review_notes, excerpt, og_title, og_description, canonical_url_suggestion, schema_type_suggestion.
+
+Return a JSON object with this exact schema:
 {
-  "seo_title": "SEO-optimized title (max 60 chars)",
-  "meta_description": "Compelling description (max 160 chars)",
-  "suggested_slug": "url-slug-format",
-  "primary_keyword": "${input.primary_keyword}",
-  "secondary_keywords_used": ["keyword1", "keyword2"],
-  "excerpt": "Brief summary for blog listings (max 155 chars)",
-  "og_title": "OpenGraph title for social sharing",
-  "og_description": "OpenGraph description for social sharing",
-  "canonical_url_suggestion": "https://example.com/blog/url-slug or leave as null if website_url not provided",
-  "schema_type_suggestion": "BlogPosting or NewsArticle",
-  "human_review_notes": ["note1", "note2"]
+  "meta_title": "SEO-optimized title (max 70 chars, include primary keyword)",
+  "meta_description": "Compelling description (max 160 chars, include primary keyword)",
+  "slug": "url-slug-format",
+  "social_preview": {
+    "title": "Social media preview title",
+    "description": "Social media preview description"
+  },
+  "schema_markup": {
+    "@type": "BlogPosting",
+    "headline": "Article headline",
+    "description": "Article description"
+  },
+  "primary_keyword_used": true,
+  "secondary_keywords_reflected": ["keyword1", "keyword2"],
+  "client_goal_reflected": true,
+  "human_review_required": false,
+  "review_ready": true,
+  "meta_notes": ["note1", "note2"],
+  "needs_review": false
 }`;
 }
 
