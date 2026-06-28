@@ -1,15 +1,9 @@
 {
   "version": "1.0.0",
   "steps": {
-    "lib/seo-blog-engine/workflow/steps/helpers.ts": {
-      "completeRunStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//completeRunStep"
-      },
-      "markRunFailedStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//markRunFailedStep"
-      },
-      "markRunRunningStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//markRunRunningStep"
+    "lib/seo-blog-engine/workflow/steps/callback-step.ts": {
+      "sendCallbackStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/callback-step//sendCallbackStep"
       }
     },
     "lib/seo-blog-engine/workflow/steps/writer-step.ts": {
@@ -28,14 +22,20 @@
         "stepId": "__builtin_response_text"
       }
     },
-    "lib/seo-blog-engine/workflow/steps/editor-step.ts": {
-      "runEditorStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/editor-step//runEditorStep"
+    "lib/seo-blog-engine/workflow/steps/helpers.ts": {
+      "completeRunStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//completeRunStep"
+      },
+      "markRunFailedStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//markRunFailedStep"
+      },
+      "markRunRunningStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/helpers//markRunRunningStep"
       }
     },
-    "lib/seo-blog-engine/workflow/steps/callback-step.ts": {
-      "sendCallbackStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/callback-step//sendCallbackStep"
+    "lib/seo-blog-engine/workflow/steps/outline-step.ts": {
+      "runOutlineStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/outline-step//runOutlineStep"
       }
     },
     "lib/seo-blog-engine/workflow/steps/seo-qa-step.ts": {
@@ -43,14 +43,14 @@
         "stepId": "step//./lib/seo-blog-engine/workflow/steps/seo-qa-step//runSeoQaStep"
       }
     },
+    "lib/seo-blog-engine/workflow/steps/editor-step.ts": {
+      "runEditorStep": {
+        "stepId": "step//./lib/seo-blog-engine/workflow/steps/editor-step//runEditorStep"
+      }
+    },
     "lib/seo-blog-engine/workflow/steps/research-step.ts": {
       "runResearchStep": {
         "stepId": "step//./lib/seo-blog-engine/workflow/steps/research-step//runResearchStep"
-      }
-    },
-    "lib/seo-blog-engine/workflow/steps/outline-step.ts": {
-      "runOutlineStep": {
-        "stepId": "step//./lib/seo-blog-engine/workflow/steps/outline-step//runOutlineStep"
       }
     },
     "lib/seo-blog-engine/workflow/steps/meta-step.ts": {

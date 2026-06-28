@@ -7,9 +7,8 @@ import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
-import type { WriterOutput } from './writer-step';
 import type { SeoQaOutput } from './seo-qa-step';
-import type { EditorOutput } from './editor-step';
+import { buildFullInputContext, extractJsonObject } from './context-builder';
 
 export interface MetaOutput {
   meta_title: string;
@@ -99,12 +98,7 @@ export async function runMetaStep(
     // Parse the response - FAIL-LOUD in production
     let metaOutput: MetaOutput;
     try {
-      // Extract JSON from response (may have surrounding text)
-      const jsonMatch = metaAnalysis.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Meta output parse failed: No JSON found in response');
-      }
-      metaOutput = JSON.parse(jsonMatch[0]);
+      metaOutput = JSON.parse(extractJsonObject(metaAnalysis)) as MetaOutput;
     } catch (parseError) {
       // PRODUCTION MODE: Always fail loud on parse errors.
       // Fallback is not used in normal workflow - this ensures AI model schema compliance.
@@ -193,18 +187,14 @@ function buildMetaContext(
 
   return `You are an expert SEO metadata specialist. Generate SEO metadata for a blog post for human review.
 
-BLOG TOPIC: ${input.blog_topic}
-BUSINESS NAME: ${input.business_name || 'Not provided'}
-WEBSITE URL: ${input.website_url || 'Not provided'}
-PRIMARY KEYWORD: ${input.primary_keyword}
-SECONDARY KEYWORDS: ${(input.secondary_keywords || []).join(', ') || 'None provided'}
-TARGET AUDIENCE: ${input.audience_notes || 'General audience'}
+FULL BLOG CONTEXT:
+${buildFullInputContext(input)}
 
 RESEARCH SUMMARY:
 - ${keyFindingsSummary}
 
 OUTLINE STRUCTURE:
-${outline.sections.map((s) => `- ${s.heading} (${s.subsections?.length || 0} subsections)`).join('\n')}
+${outline.sections.map((s) => `- ${s.heading} (${s.key_points?.length || 0} key points)`).join('\n')}
 
 SEO QA REVIEW:
 - Overall Score: ${seoQa.overall_score}
@@ -212,6 +202,9 @@ SEO QA REVIEW:
 - Primary Keyword Usage: ${seoQa.primary_keyword_usage.score}
 - Heading Structure: ${seoQa.heading_structure_review.score}
 - Client Goal Alignment: ${seoQa.client_goal_alignment.score}
+
+EDITED BLOG MARKDOWN:
+${editedDraft}
 
 CONTENT STATS:
 - Word Count: ${wordCount}
@@ -250,53 +243,9 @@ Return a JSON object with this exact schema:
   "primary_keyword_used": true,
   "secondary_keywords_reflected": ["keyword1", "keyword2"],
   "client_goal_reflected": true,
-  "human_review_required": false,
+  "human_review_required": true,
   "review_ready": true,
   "meta_notes": ["note1", "note2"],
   "needs_review": false
 }`;
-}
-
-/**
- * Generate fallback metadata if AI parsing fails
- */
-function generateFallbackMeta(
-  input: SeoBlogInput,
-  research: ResearchOutput,
-  seoQa: SeoQaOutput,
-  draft: string
-): MetaOutput {
-  const primaryKeyword = input.primary_keyword || 'blog post';
-  const slug = input.blog_topic
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-  const wordCount = draft.split(/\s+/).length;
-
-  return {
-    meta_title: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
-    meta_description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies.`,
-    slug: slug,
-    social_preview: {
-      title: `${input.blog_topic} | ${input.business_name || 'Blog'}`,
-      description: `Discover ${input.blog_topic.toLowerCase()}. Comprehensive guide with research and insights.`,
-    },
-    schema_markup: {
-      '@type': 'BlogPosting',
-      headline: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
-      description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies.`,
-    },
-    primary_keyword_used: true,
-    secondary_keywords_reflected: input.secondary_keywords || [],
-    client_goal_reflected: true,
-    human_review_required: seoQa.overall_score < 75,
-    review_ready: seoQa.overall_score >= 60,
-    meta_notes: [
-      `Overall SEO Score: ${seoQa.overall_score}`,
-      'Review and adjust metadata as needed for your brand voice',
-      'Ensure meta title and description are compelling for CTR',
-      'Verify schema markup matches your content format',
-    ],
-    needs_review: seoQa.overall_score < 75,
-  };
 }
