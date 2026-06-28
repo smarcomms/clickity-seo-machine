@@ -6,6 +6,7 @@ import { openai } from '@ai-sdk/openai';
 import { updateRunStatus } from '../../storage/runs';
 import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
+import { buildFullInputContext, extractJsonObject } from './context-builder';
 
 export interface ResearchOutput {
   search_intent: string;
@@ -20,10 +21,14 @@ export interface ResearchOutput {
   competitor_insights: string[];
   recommended_sections: string[];
   questions_to_answer: string[];
+  client_goal_alignment: string;
+  must_include: string[];
+  must_avoid: string[];
   research_notes: string;
   target_word_count: number;
   web_search_used: boolean;
-  timestamp: string;
+  needs_review: boolean;
+  timestamp?: string;
 }
 
 /**
@@ -54,16 +59,11 @@ export async function runResearchStep(
       .filter(Boolean)
       .join('\n\n');
 
-    const userMessage = `Conduct SEO research for:
-Topic: ${input.blog_topic}
-Primary Keyword: ${input.primary_keyword}
-Secondary Keywords: ${input.secondary_keywords?.join(', ') || 'none'}
-Target Audience: ${input.audience_notes || 'general'}
-Target Word Count: ${input.target_word_count || 1000}
-Business: ${input.business_name || 'unknown'}
-Website: ${input.website_url || 'unknown'}
+    const userMessage = `Create the Research Agent JSON using all supplied context.
 
-Provide comprehensive research findings in JSON format.`;
+${buildFullInputContext(input)}
+
+Return valid JSON only using the schema from your system instructions. Do not write the blog or outline. Preserve must_include and must_avoid exactly where provided.`;
 
     // Get model name: use DB config if available, otherwise fall back to env var or default
     const modelName = agentConfig.model || process.env.RESEARCH_AGENT_MODEL || 'gpt-5.4-mini';
@@ -86,11 +86,7 @@ Provide comprehensive research findings in JSON format.`;
     let researchData: ResearchOutput;
     try {
       // Try to extract JSON from response (in case of extra text)
-      const jsonMatch = response.text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      researchData = JSON.parse(jsonMatch[0]);
+      researchData = JSON.parse(extractJsonObject(response.text));
       
       // Validate required fields at runtime
       if (!Array.isArray(researchData.key_findings)) {
@@ -119,12 +115,16 @@ Provide comprehensive research findings in JSON format.`;
           `Target audience: ${input.audience_notes || 'general audience'}`,
           `Primary keyword: ${input.primary_keyword || 'to be determined'}`,
         ],
-        competitor_insights: ['Research competitors for competitive advantages'],
+        competitor_insights: ['Competitor context was not available in parsed model output'],
         recommended_sections: ['Introduction', 'Main Content', 'Conclusion'],
         questions_to_answer: ['What is the main topic?'],
-        research_notes: 'Fallback research due to parsing error',
+        client_goal_alignment: input.blog_context_brief?.business_goal || input.business_goal || 'Client goal not specified',
+        must_include: input.blog_context_brief?.must_include || input.must_include || [],
+        must_avoid: input.blog_context_brief?.must_avoid || input.must_avoid || [],
+        research_notes: 'Fallback research due to parsing error; human review recommended',
         target_word_count: input.target_word_count || 1000,
         web_search_used: false,
+        needs_review: true,
         timestamp: new Date().toISOString(),
       };
     }

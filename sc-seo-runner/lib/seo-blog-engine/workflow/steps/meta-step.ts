@@ -7,9 +7,8 @@ import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
-import type { WriterOutput } from './writer-step';
 import type { SeoQaOutput } from './seo-qa-step';
-import type { EditorOutput } from './editor-step';
+import { buildFullInputContext, extractJsonObject } from './context-builder';
 
 export interface MetaOutput {
   meta_title: string;
@@ -96,21 +95,17 @@ export async function runMetaStep(
 
     console.log(`[v0] Meta step: Received analysis, parsing JSON`);
 
-    // Parse the response
+    // Parse the response - FAIL-LOUD in production
     let metaOutput: MetaOutput;
     try {
-      // Extract JSON from response (may have surrounding text)
-      const jsonMatch = metaAnalysis.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      metaOutput = JSON.parse(jsonMatch[0]);
+      metaOutput = JSON.parse(extractJsonObject(metaAnalysis)) as MetaOutput;
     } catch (parseError) {
-      console.warn(
-        `[v0] Meta step: Failed to parse JSON response, using fallback`,
-        parseError instanceof Error ? parseError.message : String(parseError)
-      );
-      metaOutput = generateFallbackMeta(input, research, seoQa, originalDraft);
+      // PRODUCTION MODE: Always fail loud on parse errors.
+      // Fallback is not used in normal workflow - this ensures AI model schema compliance.
+      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+      const fullError = `Meta output parse failed: ${errorMsg}`;
+      console.error(`[v0] Meta step: ${fullError}`);
+      throw new Error(fullError);
     }
 
     // FAIL-LOUD: Validate all required fields exist and have correct types
@@ -160,7 +155,7 @@ export async function runMetaStep(
 
     console.log(
       `[v0] Meta step: Complete for run ${runId}`,
-      `Generated metadata: ${metaOutput.seo_title.substring(0, 50)}...`
+      `Generated metadata: ${metaOutput.meta_title.substring(0, 50)}...`
     );
     return metaOutput;
   } catch (error) {
@@ -192,24 +187,24 @@ function buildMetaContext(
 
   return `You are an expert SEO metadata specialist. Generate SEO metadata for a blog post for human review.
 
-BLOG TOPIC: ${input.blog_topic}
-BUSINESS NAME: ${input.business_name || 'Not provided'}
-WEBSITE URL: ${input.website_url || 'Not provided'}
-PRIMARY KEYWORD: ${input.primary_keyword}
-SECONDARY KEYWORDS: ${(input.secondary_keywords || []).join(', ') || 'None provided'}
-TARGET AUDIENCE: ${input.audience_notes || 'General audience'}
+FULL BLOG CONTEXT:
+${buildFullInputContext(input)}
 
 RESEARCH SUMMARY:
 - ${keyFindingsSummary}
 
 OUTLINE STRUCTURE:
-${outline.sections.map((s) => `- ${s.heading} (${s.subsections?.length || 0} subsections)`).join('\n')}
+${outline.sections.map((s) => `- ${s.heading} (${s.key_points?.length || 0} key points)`).join('\n')}
 
 SEO QA REVIEW:
 - Overall Score: ${seoQa.overall_score}
-- Search Intent Alignment: ${seoQa.search_intent_alignment}
-- Keyword Usage: ${seoQa.keyword_usage_assessment}
-- Heading Structure: ${seoQa.heading_structure_assessment}
+- Search Intent Alignment: ${seoQa.search_intent_alignment.score}
+- Primary Keyword Usage: ${seoQa.primary_keyword_usage.score}
+- Heading Structure: ${seoQa.heading_structure_review.score}
+- Client Goal Alignment: ${seoQa.client_goal_alignment.score}
+
+EDITED BLOG MARKDOWN:
+${editedDraft}
 
 CONTENT STATS:
 - Word Count: ${wordCount}
@@ -222,65 +217,35 @@ Generate metadata that:
 2. Includes the primary keyword naturally in title and description
 3. Is SEO-optimized for search engines
 4. Is compelling for human readers and CTR
-5. Follows best practices (title max 60 chars, description max 160 chars)
+5. Follows best practices (title max 70 chars, description max 160 chars)
 6. Includes review notes for the human editor
 
-Return a JSON object with these exact fields:
+Return valid JSON only using exactly these top-level keys:
+meta_title, meta_description, slug, social_preview, schema_markup, primary_keyword_used, secondary_keywords_reflected, client_goal_reflected, human_review_required, review_ready, meta_notes, needs_review.
+
+Do not use old keys:
+seo_title, suggested_slug, secondary_keywords_used, human_review_notes, excerpt, og_title, og_description, canonical_url_suggestion, schema_type_suggestion.
+
+Return a JSON object with this exact schema:
 {
-  "seo_title": "SEO-optimized title (max 60 chars)",
-  "meta_description": "Compelling description (max 160 chars)",
-  "suggested_slug": "url-slug-format",
-  "primary_keyword": "${input.primary_keyword}",
-  "secondary_keywords_used": ["keyword1", "keyword2"],
-  "excerpt": "Brief summary for blog listings (max 155 chars)",
-  "og_title": "OpenGraph title for social sharing",
-  "og_description": "OpenGraph description for social sharing",
-  "canonical_url_suggestion": "https://example.com/blog/url-slug or leave as null if website_url not provided",
-  "schema_type_suggestion": "BlogPosting or NewsArticle",
-  "human_review_notes": ["note1", "note2"]
+  "meta_title": "SEO-optimized title (max 70 chars, include primary keyword)",
+  "meta_description": "Compelling description (max 160 chars, include primary keyword)",
+  "slug": "url-slug-format",
+  "social_preview": {
+    "title": "Social media preview title",
+    "description": "Social media preview description"
+  },
+  "schema_markup": {
+    "@type": "BlogPosting",
+    "headline": "Article headline",
+    "description": "Article description"
+  },
+  "primary_keyword_used": true,
+  "secondary_keywords_reflected": ["keyword1", "keyword2"],
+  "client_goal_reflected": true,
+  "human_review_required": true,
+  "review_ready": true,
+  "meta_notes": ["note1", "note2"],
+  "needs_review": false
 }`;
-}
-
-/**
- * Generate fallback metadata if AI parsing fails
- */
-function generateFallbackMeta(
-  input: SeoBlogInput,
-  research: ResearchOutput,
-  seoQa: SeoQaOutput,
-  draft: string
-): MetaOutput {
-  const primaryKeyword = input.primary_keyword || 'blog post';
-  const slug = input.blog_topic
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-  const wordCount = draft.split(/\s+/).length;
-
-  return {
-    meta_title: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
-    meta_description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies.`,
-    slug: slug,
-    social_preview: {
-      title: `${input.blog_topic} | ${input.business_name || 'Blog'}`,
-      description: `Discover ${input.blog_topic.toLowerCase()}. Comprehensive guide with research and insights.`,
-    },
-    schema_markup: {
-      '@type': 'BlogPosting',
-      headline: `${input.blog_topic} - ${input.business_name || 'Blog'}`,
-      description: `Comprehensive guide to ${input.blog_topic.toLowerCase()}. Research-backed insights and practical strategies.`,
-    },
-    primary_keyword_used: true,
-    secondary_keywords_reflected: input.secondary_keywords || [],
-    client_goal_reflected: true,
-    human_review_required: seoQa.overall_score < 75,
-    review_ready: seoQa.overall_score >= 60,
-    meta_notes: [
-      `Overall SEO Score: ${seoQa.overall_score}`,
-      'Review and adjust metadata as needed for your brand voice',
-      'Ensure meta title and description are compelling for CTR',
-      'Verify schema markup matches your content format',
-    ],
-    needs_review: seoQa.overall_score < 75,
-  };
 }

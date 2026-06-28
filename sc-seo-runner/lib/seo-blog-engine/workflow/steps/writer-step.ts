@@ -7,6 +7,7 @@ import { updateRunDraft, updateRunStatus } from '../../storage/runs';
 import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { OutlineOutput } from './outline-step';
+import { buildFullInputContext } from './context-builder';
 
 export interface WriterOutput {
   draft_markdown: string;
@@ -102,7 +103,20 @@ export async function runWriterStep(
       ctaContext = `\n\nCall-to-Action Guidance:\n${ctaNotes}`;
     }
 
-    const userMessage = `Write the first draft blog post about: ${topic}${researchContext}${outlineContext}${linksContext}${ctaContext}`;
+    const userMessage = `Write the first draft blog post using the full Blog Context Brief, Research Agent output, and Outline Agent output.
+
+${buildFullInputContext(input)}${researchContext}${outlineContext}${linksContext}${ctaContext}
+
+Topic: ${topic}
+Business: ${businessName}
+Primary Keyword: ${primaryKeyword}
+Secondary Keywords: ${secondaryKeywords}
+Target Word Count: ${targetWordCount}
+Audience: ${audienceNotes}
+Brand Voice: ${brandVoice}
+Additional Notes: ${additionalNotes}
+
+Return Markdown only, following the Writer Agent instructions. Do not invent unsupported facts, services, locations, offers, claims, or links.`;
 
     // Get model name: use DB config if available, otherwise fall back to env var or default
     const modelName =

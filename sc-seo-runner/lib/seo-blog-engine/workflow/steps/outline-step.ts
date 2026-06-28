@@ -6,6 +6,7 @@ import { openai } from '@ai-sdk/openai';
 import { updateRunStatus } from '../../storage/runs';
 import { getAgentConfig } from '../../storage/agent-configs';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
+import { buildFullInputContext, extractJsonObject } from './context-builder';
 
 export interface Section {
   heading: string;
@@ -13,6 +14,7 @@ export interface Section {
   estimated_words: number;
   key_points: string[];
   seo_notes: string[];
+  client_goal_notes: string[];
 }
 
 export interface OutlineOutput {
@@ -25,7 +27,8 @@ export interface OutlineOutput {
   cta_guidance: string;
   internal_link_opportunities: string[];
   notes_for_writer: string[];
-  timestamp: string;
+  needs_review: boolean;
+  timestamp?: string;
 }
 
 /**
@@ -84,25 +87,11 @@ Research Insights from Research Agent:
 - Questions to Answer: ${researchData.questions_to_answer?.join(', ') || 'N/A'}`;
     }
 
-    const userMessage = `Create an outline for this article:
+    const userMessage = `Create the Outline Agent JSON using the supplied Research Agent output and full Blog Context Brief.
 
-Topic: ${topic}
-Business: ${businessName}
-Primary Keyword: ${primaryKeyword}
-Secondary Keywords: ${secondaryKeywords}
-Target Word Count: ${targetWordCount}
+${buildFullInputContext(input)}${researchContext}
 
-Audience Profile:
-${audienceNotes}
-
-Brand Voice:
-${brandVoice}
-
-Call-to-Action Focus:
-${ctaNotes}
-
-Additional Requirements:
-${additionalNotes}${researchContext}`;
+Return valid JSON only using the schema from your system instructions. Preserve must_include and must_avoid restrictions, and include client_goal_notes for each section.`;
 
     // Get model name: use DB config if available, otherwise fall back to env var or default
     const modelName =
@@ -128,7 +117,7 @@ ${additionalNotes}${researchContext}`;
     );
 
     // Parse the JSON response
-    const outlineData = JSON.parse(response.text) as OutlineOutput;
+    const outlineData = JSON.parse(extractJsonObject(response.text)) as OutlineOutput;
 
     // Validate required fields and add defaults
     outlineData.timestamp = outlineData.timestamp || new Date().toISOString();
@@ -143,6 +132,7 @@ ${additionalNotes}${researchContext}`;
           estimated_words: 150,
           key_points: ['Topic overview', 'Why this matters'],
           seo_notes: ['Include primary keyword naturally'],
+          client_goal_notes: ['Connect the topic to the supplied client goal where relevant'],
         },
         {
           heading: 'Main Content',
@@ -150,6 +140,7 @@ ${additionalNotes}${researchContext}`;
           estimated_words: 1000,
           key_points: ['Key insight 1', 'Key insight 2', 'Key insight 3'],
           seo_notes: ['Use secondary keywords', 'Answer user intent questions'],
+          client_goal_notes: ['Use supplied business goal and services without inventing claims'],
         },
         {
           heading: 'Conclusion',
@@ -157,9 +148,21 @@ ${additionalNotes}${researchContext}`;
           estimated_words: 150,
           key_points: ['Summary of key points', 'Call to action'],
           seo_notes: ['Reinforce primary keyword'],
+          client_goal_notes: ['Close with the supplied CTA direction'],
         },
       ];
     }
+
+
+    outlineData.sections = outlineData.sections.map((section) => ({
+      ...section,
+      key_points: Array.isArray(section.key_points) ? section.key_points : [],
+      seo_notes: Array.isArray(section.seo_notes) ? section.seo_notes : [],
+      client_goal_notes: Array.isArray(section.client_goal_notes) ? section.client_goal_notes : [],
+      estimated_words: typeof section.estimated_words === 'number' ? section.estimated_words : 0,
+    }));
+
+    outlineData.needs_review = Boolean(outlineData.needs_review);
 
     console.log(
       `[v0] Outline step: Generated outline with ${outlineData.sections.length} sections`
@@ -191,6 +194,7 @@ ${additionalNotes}${researchContext}`;
             'What you will learn',
           ],
           seo_notes: ['Include primary keyword in first paragraph', 'Use engaging hook'],
+          client_goal_notes: ['Introduce why this topic matters for the supplied audience and business goal'],
         },
         {
           heading: 'Key Concepts and Benefits',
@@ -203,6 +207,7 @@ ${additionalNotes}${researchContext}`;
             'Real-world applications',
           ],
           seo_notes: ['Use secondary keywords naturally', 'Answer common questions'],
+          client_goal_notes: ['Tie benefits back to the supplied service or CTA only when supported'],
         },
         {
           heading: 'Best Practices and Implementation',
@@ -215,6 +220,7 @@ ${additionalNotes}${researchContext}`;
             'Tools and resources',
           ],
           seo_notes: ['Use long-tail keywords', 'Include practical examples'],
+          client_goal_notes: ['Keep recommendations grounded in the supplied context'],
         },
         {
           heading: 'Conclusion and Next Steps',
@@ -226,6 +232,7 @@ ${additionalNotes}${researchContext}`;
             'Call to action',
           ],
           seo_notes: ['Reinforce primary keyword', 'Create urgency for CTA'],
+          client_goal_notes: ['Use the supplied CTA direction without inventing offers'],
         },
       ],
       intro_guidance: `Start with a compelling hook that addresses the reader's pain point. Introduce ${topic} in the context of ${businessName} and explain why it matters to the target audience. Include the primary keyword "${primaryKeyword}" naturally in the first 100 words.`,
@@ -237,6 +244,7 @@ ${additionalNotes}${researchContext}`;
         'Link to case studies or success stories',
         'Link to resource pages or tools',
       ],
+      needs_review: true,
       notes_for_writer: [
         `Remember to maintain a ${brandVoice} tone throughout`,
         `Address the needs of: ${audienceNotes}`,
