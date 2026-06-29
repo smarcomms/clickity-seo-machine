@@ -131,7 +131,7 @@ Return valid JSON only using the schema from your system instructions. Do not wr
 
     // Persist research_json to database
     console.log(`[v0] Research step: Persisting research_json for run ${runId}`);
-    await updateRunStatus(runId, 'researching', researchData);
+    await updateRunStatus(runId, 'researching', researchData as unknown as Record<string, unknown>);
 
     console.log(`[v0] Research step: Complete for run ${runId}`);
     return researchData;

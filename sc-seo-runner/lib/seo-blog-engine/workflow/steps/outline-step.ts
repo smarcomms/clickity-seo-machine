@@ -169,7 +169,7 @@ Return valid JSON only using the schema from your system instructions. Preserve 
     );
     // Persist outline_json to database
     console.log(`[v0] Outline step: Persisting outline_json for run ${runId}`);
-    await updateRunStatus(runId, 'outlining', outlineData);
+    await updateRunStatus(runId, 'outlining', outlineData as unknown as Record<string, unknown>);
 
     return outlineData;
   } catch (error) {
