@@ -134,7 +134,7 @@ Return Markdown only, following the Writer Agent instructions. Do not invent uns
       system: systemPrompt,
       prompt: userMessage,
       temperature: 0.7,
-      maxTokens: 4000,
+      maxOutputTokens: 4000,
     });
 
     const draftMarkdown = response.text;

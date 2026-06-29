@@ -6,12 +6,27 @@ import { SeoBlogInput } from '../schemas/seo-blog-input';
  * Create a new SEO blog run
  */
 export async function createRun(input: SeoBlogInput): Promise<SeoBlogRun> {
+  const initialResearchJson = {
+    external_research: input.external_research ?? null,
+    research_source: input.external_research ? 'n8n_firecrawl' : 'seo_blog_engine',
+    smc_content_batch_id: input.smc_content_batch_id ?? null,
+  };
+
   const result = await query(
     `INSERT INTO seo_blog_runs (
-      input_json, callback_url, status
-    ) VALUES ($1, $2, 'queued')
+      input_json,
+      callback_url,
+      status,
+      smc_content_batch_id,
+      research_json
+    ) VALUES ($1, $2, 'queued', $3, $4)
     RETURNING *`,
-    [JSON.stringify(input), input.callback_url || null]
+    [
+      JSON.stringify(input),
+      input.callback_url || null,
+      input.smc_content_batch_id || null,
+      JSON.stringify(initialResearchJson),
+    ]
   );
 
   return parseRunRow(result.rows[0]);
@@ -46,9 +61,20 @@ export async function updateRunStatus(
   const params: unknown[] = [runId, status];
 
   if (stageOutput && stageField) {
+  if (stageField === 'research_json') {
+    updateParts.push(
+      `${stageField} = COALESCE(${stageField}, '{}'::jsonb) || $${params.length + 1}::jsonb`
+    );
+
+    params.push(JSON.stringify({
+      research_agent_output: stageOutput,
+      research_agent_updated_at: new Date().toISOString(),
+    }));
+  } else {
     updateParts.push(`${stageField} = $${params.length + 1}`);
     params.push(JSON.stringify(stageOutput));
   }
+}
 
   const query_text = `UPDATE seo_blog_runs 
     SET ${updateParts.join(', ')}
@@ -170,6 +196,7 @@ export function parseRunRow(row: any): SeoBlogRun {
     draft_markdown: row.draft_markdown,
     optimized_json: row.optimized_json,
     final_output_json: row.final_output_json,
+    smc_content_batch_id: row.smc_content_batch_id,
     error_message: row.error_message,
     callback_url: row.callback_url,
     callback_attempted_at: row.callback_attempted_at ? new Date(row.callback_attempted_at) : undefined,

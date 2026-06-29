@@ -115,7 +115,7 @@ export async function runSeoQaStep(
       system: systemPrompt,
       prompt: seoQaPrompt,
       temperature: 0.4,
-      maxTokens: 3000,
+      maxOutputTokens: 3000,
     });
 
     console.log(`[v0] SEO QA step: Received audit from model, parsing JSON`);
@@ -134,7 +134,7 @@ export async function runSeoQaStep(
     console.log(
       `[v0] SEO QA step: Persisting SEO QA audit (score: ${seoQaResult.overall_score}) for run ${runId}`
     );
-    await updateRunStatus(runId, 'seo_qa', seoQaResult);
+    await updateRunStatus(runId, 'seo_qa', seoQaResult as unknown as Record<string, unknown>);
 
     console.log(`[v0] SEO QA step: Complete for run ${runId}`);
     return seoQaResult;

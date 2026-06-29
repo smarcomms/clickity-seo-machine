@@ -53,7 +53,7 @@ export async function runEditorStep(
     const { text } = await generateText({
       model: openai(modelName),
       temperature: 0.6,
-      maxTokens: 8000,
+      maxOutputTokens: 8000,
       system: systemPrompt,
       messages: [
         {
