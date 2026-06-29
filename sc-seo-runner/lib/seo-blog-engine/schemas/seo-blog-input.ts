@@ -31,6 +31,28 @@ const BlogContextBriefSchema = z.object({
   source_summary: z.record(z.string(), z.unknown()).optional(),
 }).passthrough().optional();
 
+const ExternalResearchSourceSchema = z.object({
+  title: z.string().optional(),
+  url: z.string().optional(),
+  source_summary: z.string().optional(),
+  usefulness: z.string().optional(),
+  use_in_blog: z.boolean().optional(),
+}).passthrough();
+
+const ExternalResearchSchema = z.object({
+  research_used: z.boolean().optional(),
+  research_provider: z.string().optional(),
+  search_date: z.string().optional(),
+  topic: z.string().optional(),
+  primary_query: z.string().optional(),
+  sources: z.array(ExternalResearchSourceSchema).optional(),
+  competitor_insights: z.array(z.string()).optional(),
+  content_gaps: z.array(z.string()).optional(),
+  keyword_insights: z.array(z.string()).optional(),
+  research_notes: z.string().optional(),
+}).passthrough();
+
+
 export const SeoBlogInputSchema = z.object({
   // Required fields
   business_name: z.string().max(255),
@@ -64,6 +86,8 @@ export const SeoBlogInputSchema = z.object({
   must_avoid: z.array(z.string()).optional(),
   services_to_promote: z.array(z.string()).optional(),
   key_messages: z.array(z.string()).optional(),
+  smc_content_batch_id: z.string().optional(),
+  external_research: ExternalResearchSchema.optional(),
   
   // Competitive and source context
   competitors: z.array(z.string()).optional(),

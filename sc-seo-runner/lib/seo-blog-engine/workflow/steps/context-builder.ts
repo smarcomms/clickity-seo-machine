@@ -49,7 +49,8 @@ export function extractJsonObject(text: string): string {
 export function buildFullInputContext(input: SeoBlogInput): string {
   const brief: NonNullable<SeoBlogInput['blog_context_brief']> = input.blog_context_brief ?? {};
   const orderContext: NonNullable<SeoBlogInput['order_context']> = input.order_context ?? {};
-
+  const externalResearch = input.external_research ?? null;
+  const smcContentBatchId = input.smc_content_batch_id ?? null;
   const targetAudience =
     cleanString(brief.target_audience) ||
     cleanString(input.target_audience) ||
@@ -116,7 +117,9 @@ Brand Voice Notes: ${formatValue(brandVoice)}
 CTA: ${formatValue(cta)}
 Internal Link Notes: ${formatValue(input.internal_link_notes)}
 Additional Order Notes: ${formatValue(input.additional_order_notes)}
-
+SMC Content Batch ID: ${formatValue(smcContentBatchId)}
+External Research:
+${formatJson(externalResearch)}
 Business Summary:
 ${formatValue(brief.business_summary)}
 

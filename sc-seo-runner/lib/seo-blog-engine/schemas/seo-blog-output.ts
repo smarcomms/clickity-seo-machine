@@ -24,6 +24,7 @@ export type RunStatus = z.infer<typeof RunStatusEnum>;
 export interface SeoBlogRun {
   id: string;
   status: RunStatus;
+  smc_content_batch_id?: string | null;
   input_json?: Record<string, unknown>;
   research_json?: Record<string, unknown>;
   outline_json?: Record<string, unknown>;
