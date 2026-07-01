@@ -12,13 +12,7 @@ export interface RevisionRequest {
   run_id: string;
   revision_mode: 'moderate_revision' | 'heavy_revision';
   reviewer_email: string;
-  reviewer_feedback: {
-    requested_changes: string;
-    top_priority_fix?: string;
-    second_priority_fix?: string;
-    preserve_notes?: string;
-    risk_notes?: string;
-  };
+  reviewer_feedback: Record<string, string | undefined>;
   smc_content_batch_id?: string;
   order_id?: string;
   review_round?: number;
@@ -104,37 +98,49 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
       `[v0] Revision Workflow: Current draft length: ${currentDraft.length} chars`
     );
 
-    // Build reviewer feedback string
+    // Build reviewer feedback string from flexible feedback object
+    // Define known fields in priority order with human-readable labels
+    const knownFieldsOrder = [
+      { key: 'requested_changes', label: 'Requested Changes' },
+      { key: 'top_priority_fix', label: 'Top Priority Fix' },
+      { key: 'second_priority_fix', label: 'Second Priority Fix' },
+      { key: 'preserve_notes', label: 'Preserve Notes' },
+      { key: 'risk_notes', label: 'Risk Notes' },
+      { key: 'rewrite_reason', label: 'Rewrite Reason' },
+      { key: 'new_direction', label: 'New Direction' },
+      { key: 'must_keep', label: 'Must Keep' },
+      { key: 'must_remove', label: 'Must Remove' },
+      { key: 'tone_notes', label: 'Tone Notes' },
+    ];
+
     const feedbackParts: string[] = [];
+    const processedKeys = new Set<string>();
 
-    if (request.reviewer_feedback.requested_changes) {
-      feedbackParts.push(
-        `Main Feedback:\n${request.reviewer_feedback.requested_changes}`
-      );
+    // Process known fields in order
+    for (const { key, label } of knownFieldsOrder) {
+      const value = request.reviewer_feedback[key];
+      if (value && typeof value === 'string') {
+        const trimmedValue = value.trim();
+        if (trimmedValue) {
+          feedbackParts.push(`${label}:\n${trimmedValue}`);
+          processedKeys.add(key);
+        }
+      }
     }
 
-    if (request.reviewer_feedback.top_priority_fix) {
-      feedbackParts.push(
-        `Top Priority Fix:\n${request.reviewer_feedback.top_priority_fix}`
-      );
-    }
-
-    if (request.reviewer_feedback.second_priority_fix) {
-      feedbackParts.push(
-        `Second Priority Fix:\n${request.reviewer_feedback.second_priority_fix}`
-      );
-    }
-
-    if (request.reviewer_feedback.preserve_notes) {
-      feedbackParts.push(
-        `Keep the following:\n${request.reviewer_feedback.preserve_notes}`
-      );
-    }
-
-    if (request.reviewer_feedback.risk_notes) {
-      feedbackParts.push(
-        `Be careful with:\n${request.reviewer_feedback.risk_notes}`
-      );
+    // Process extra fields not in known list
+    for (const [key, value] of Object.entries(request.reviewer_feedback)) {
+      if (!processedKeys.has(key) && value && typeof value === 'string') {
+        const trimmedValue = value.trim();
+        if (trimmedValue) {
+          // Convert snake_case key to Title Case label
+          const label = key
+            .split('_')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          feedbackParts.push(`${label}:\n${trimmedValue}`);
+        }
+      }
     }
 
     let reviewerFeedback = feedbackParts.join('\n\n').trim();
