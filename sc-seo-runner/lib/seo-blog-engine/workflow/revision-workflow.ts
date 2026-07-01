@@ -151,8 +151,9 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
 
     // Extract context for revision step
     const input =
-      (run.input_json as Record<string, any>) ||
-      (typeof run.input_json === 'object' ? run.input_json : undefined);
+      run.input_json && typeof run.input_json === 'object'
+        ? (run.input_json as any)
+        : undefined;
     const research = finalOutput.research_json || undefined;
     const outline = finalOutput.outline_json || undefined;
     const seoQa = finalOutput.seo_qa_json || undefined;
