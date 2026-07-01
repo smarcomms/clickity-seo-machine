@@ -4,6 +4,7 @@ import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { getAgentConfig } from '../../storage/agent-configs';
+import { buildFullInputContext } from './context-builder';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -27,7 +28,6 @@ export async function runRevisionStep(
   currentDraft: string,
   reviewerFeedback: string,
   revisionMode: 'moderate_revision' | 'heavy_revision',
-  agentConfig: Awaited<ReturnType<typeof getAgentConfig>>,
   input?: SeoBlogInput,
   research?: ResearchOutput,
   outline?: OutlineOutput,
@@ -37,6 +37,8 @@ export async function runRevisionStep(
   console.log(`[v0] Revision step: Starting with mode: ${revisionMode}`);
 
   try {
+    // Load agent config from database
+    const agentConfig = await getAgentConfig('revision');
     if (!agentConfig) {
       throw new Error(
         'Active agent config not found for agent_key: revision'
@@ -60,44 +62,45 @@ export async function runRevisionStep(
         ? 'Apply comprehensive changes. Restructure sections if needed. Rewrite paragraphs for clarity and SEO. Be thorough.'
         : 'Apply focused changes. Polish existing structure. Refine wording and clarity. Keep sections intact.';
 
-    // Build context sections (optional, but helpful for revision)
-    let contextSections: string[] = [];
-
+    // Build context with full Blog Context Brief if input is available
+    let contextBlock = '';
     if (input) {
-      contextSections.push(`Blog Topic: ${input.blog_topic || 'N/A'}`);
-      contextSections.push(
-        `Primary Keyword: ${input.primary_keyword || 'N/A'}`
-      );
-      contextSections.push(
-        `Business: ${input.business_name || 'N/A'}`
-      );
-      if (input.brand_voice_notes) {
-        contextSections.push(`Brand Voice: ${input.brand_voice_notes}`);
-      }
-      if (input.audience_notes) {
-        contextSections.push(`Target Audience: ${input.audience_notes}`);
-      }
+      contextBlock = `\n\n${buildFullInputContext(input)}`;
     }
 
+    // Add additional context from other agents if available
+    let additionalContext: string[] = [];
+
     if (research) {
-      contextSections.push(
-        `Content Angle: ${(research as Record<string, any>).content_angle || 'N/A'}`
-      );
+      const findings = (research as Record<string, any>).key_findings || [];
+      if (Array.isArray(findings) && findings.length > 0) {
+        additionalContext.push(
+          `\n\nPrevious Research Findings:\n${findings
+            .map((f: any) => `- ${typeof f === 'string' ? f : JSON.stringify(f)}`)
+            .join('\n')}`
+        );
+      }
     }
 
     if (outline) {
-      contextSections.push(
-        `Outline Title: ${(outline as Record<string, any>).title || 'N/A'}`
+      const sections = ((outline as Record<string, any>).sections || []).map(
+        (s: any) =>
+          `## ${typeof s === 'string' ? s : s.heading || 'Section'}`
       );
+      if (sections.length > 0) {
+        additionalContext.push(
+          `\n\nOriginal Outline Structure:\n${sections.join('\n')}`
+        );
+      }
     }
 
     if (seoQa) {
       const seoQaObj = seoQa as Record<string, any>;
-      contextSections.push(
-        `SEO Overall Score: ${seoQaObj.overall_score || 'N/A'}/100`
+      additionalContext.push(
+        `\n\nSEO QA Results:\nOverall Score: ${seoQaObj.overall_score || 'N/A'}/100`
       );
       if (seoQaObj.priority_fixes && Array.isArray(seoQaObj.priority_fixes)) {
-        contextSections.push(
+        additionalContext.push(
           `Priority Fixes: ${seoQaObj.priority_fixes.join('; ')}`
         );
       }
@@ -105,16 +108,10 @@ export async function runRevisionStep(
 
     if (meta) {
       const metaObj = meta as Record<string, any>;
-      contextSections.push(`Meta Title: ${metaObj.meta_title || 'N/A'}`);
-      contextSections.push(
-        `Meta Description: ${metaObj.meta_description || 'N/A'}`
+      additionalContext.push(
+        `\n\nMeta Information:\nMeta Title: ${metaObj.meta_title || 'N/A'}\nMeta Description: ${metaObj.meta_description || 'N/A'}`
       );
     }
-
-    const contextBlock =
-      contextSections.length > 0
-      ? `\n\nContext:\n${contextSections.join('\n')}`
-      : '';
 
     // Build user message
     const userMessage = `Revise the blog draft below using the reviewer feedback provided.
@@ -123,7 +120,7 @@ Revision Mode: ${revisionMode}
 ${revisionInstruction}
 
 Reviewer Feedback:
-${reviewerFeedback}${contextBlock}
+${reviewerFeedback}${contextBlock}${additionalContext.join('')}
 
 Current Draft Markdown:
 ${currentDraft}
@@ -135,7 +132,7 @@ Return the revised blog in Markdown only. Do not return JSON. Do not include exp
       agentConfig.model ||
       process.env.REVISION_AGENT_MODEL ||
       process.env.EDITOR_AGENT_MODEL ||
-      'gpt-4-mini';
+      'gpt-5.4-mini';
     console.log(`[v0] Revision step: Using model: ${modelName}`);
 
     // Call AI model via direct OpenAI provider
@@ -149,10 +146,10 @@ Return the revised blog in Markdown only. Do not return JSON. Do not include exp
       maxOutputTokens: 8000,
     });
 
-    const revisedMarkdown = response.text;
+    const revisedMarkdown = response.text.trim();
 
     // Validate output
-    if (!revisedMarkdown || revisedMarkdown.trim().length === 0) {
+    if (!revisedMarkdown || revisedMarkdown.length === 0) {
       throw new Error('Revision Agent returned empty output');
     }
 
