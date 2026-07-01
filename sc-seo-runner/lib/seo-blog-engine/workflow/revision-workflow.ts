@@ -19,6 +19,11 @@ export interface RevisionRequest {
     preserve_notes?: string;
     risk_notes?: string;
   };
+  smc_content_batch_id?: string;
+  order_id?: string;
+  review_round?: number;
+  current_draft_markdown?: string;
+  source?: string;
 }
 
 /**
@@ -58,22 +63,41 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
       throw new Error(`Run not found: ${request.run_id}`);
     }
 
+    // Validate run is completed
+    if (run.status !== 'completed') {
+      throw new Error(
+        `Run status is "${run.status}", not "completed". Cannot revise incomplete runs.`
+      );
+    }
+
     if (!run.final_output_json) {
       throw new Error(
         `Run has no final_output_json. Run status: ${run.status}`
       );
     }
 
-    // Get the latest draft markdown
-    const currentDraft =
-      (run.final_output_json as Record<string, any>)
-        .edited_draft_markdown ||
-      (run.final_output_json as Record<string, any>).draft_markdown;
+    // Get the latest draft markdown with priority:
+    // 1. request.current_draft_markdown (if provided)
+    // 2. run.final_output_json.edited_draft_markdown
+    // 3. run.final_output_json.draft_markdown
+    // 4. run.draft_markdown
+    const finalOutput = run.final_output_json as Record<string, any>;
+    let currentDraft =
+      request.current_draft_markdown ||
+      finalOutput.edited_draft_markdown ||
+      finalOutput.draft_markdown ||
+      (run as Record<string, any>).draft_markdown;
 
     if (!currentDraft || typeof currentDraft !== 'string') {
       throw new Error(
-        'No draft markdown found in run. Cannot proceed with revision.'
+        'No draft markdown found in run or request. Cannot proceed with revision.'
       );
+    }
+
+    // Trim and validate draft
+    currentDraft = currentDraft.trim();
+    if (!currentDraft || currentDraft.length === 0) {
+      throw new Error('Draft markdown is empty after trimming.');
     }
 
     console.log(
@@ -113,15 +137,22 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
       );
     }
 
-    const reviewerFeedback = feedbackParts.join('\n\n');
+    let reviewerFeedback = feedbackParts.join('\n\n').trim();
+
+    if (!reviewerFeedback || reviewerFeedback.length === 0) {
+      throw new Error(
+        'Reviewer feedback is empty after trimming. At least one feedback field is required.'
+      );
+    }
 
     console.log(
       `[v0] Revision Workflow: Reviewer feedback length: ${reviewerFeedback.length} chars`
     );
 
     // Extract context for revision step
-    const finalOutput = run.final_output_json as Record<string, any>;
-    const input = (run.input_json as Record<string, any>) || undefined;
+    const input =
+      (run.input_json as Record<string, any>) ||
+      (typeof run.input_json === 'object' ? run.input_json : undefined);
     const research = finalOutput.research_json || undefined;
     const outline = finalOutput.outline_json || undefined;
     const seoQa = finalOutput.seo_qa_json || undefined;
@@ -145,8 +176,11 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
     );
 
     // Prepare internal review metadata
+    // Review round priority: finalOutput.internal_review?.review_round, then request.review_round, then 1
     const previousReviewRound =
-      (finalOutput.internal_review?.review_round as number) || 0;
+      (finalOutput.internal_review?.review_round as number) ||
+      request.review_round ||
+      1;
     const newReviewRound = previousReviewRound + 1;
 
     const internalReviewMetadata = {
@@ -174,15 +208,16 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
     );
 
     // Update smc_content_batches status if batch_id exists
-    if (run.smc_content_batch_id) {
+    const batchId = run.smc_content_batch_id || request.smc_content_batch_id;
+    if (batchId) {
       try {
         console.log(
-          `[v0] Revision Workflow: Updating smc_content_batches status for batch ${run.smc_content_batch_id}`
+          `[v0] Revision Workflow: Updating smc_content_batches status for batch ${batchId}`
         );
 
         await query(
           `UPDATE smc_content_batches SET status = $1, updated_at = NOW() WHERE id = $2`,
-          ['blog_revised_review_pending', run.smc_content_batch_id]
+          ['blog_revised_review_pending', batchId]
         );
 
         console.log(
