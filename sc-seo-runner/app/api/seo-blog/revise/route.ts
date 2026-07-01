@@ -6,7 +6,8 @@ import {
   errorResponse,
   successResponse,
 } from '@/lib/seo-blog-engine/utils/api-auth';
-import { revisionWorkflow, RevisionRequest } from '@/lib/seo-blog-engine/workflow/revision-workflow';
+import { revisionWorkflow } from '@/lib/seo-blog-engine/workflow/revision-workflow';
+import type { RevisionRequest } from '@/lib/seo-blog-engine/workflow/revision-workflow';
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,8 +67,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate reviewer_email is required and non-empty
+    if (!data.reviewer_email || typeof data.reviewer_email !== 'string') {
+      return errorResponse('reviewer_email is required and must be a string', 400);
+    }
+
+    const reviewer_email = (data.reviewer_email as string).trim();
+    if (!reviewer_email) {
+      return errorResponse('reviewer_email is required and must be a non-empty string', 400);
+    }
+
     // Extract optional fields with defaults
-    const reviewer_email = typeof data.reviewer_email === 'string' ? data.reviewer_email : '';
     const smc_content_batch_id = typeof data.smc_content_batch_id === 'string' ? data.smc_content_batch_id : undefined;
     const order_id = typeof data.order_id === 'string' ? data.order_id : undefined;
     const review_round = typeof data.review_round === 'number' ? data.review_round : undefined;
@@ -105,23 +115,15 @@ export async function POST(request: NextRequest) {
     );
 
     // Submit to Workflow SDK for orchestration
-    try {
-      await start(revisionWorkflow, [revisionRequest]);
-      console.log(`[v0] Revision workflow started for run ${revisionRequest.run_id}`);
-    } catch (err) {
-      console.error(
-        `[v0] Workflow error for run ${revisionRequest.run_id}:`,
-        err instanceof Error ? err.message : String(err)
-      );
-      // Continue - workflow may still execute
-    }
+    await start(revisionWorkflow, [revisionRequest]);
+    console.log(`[v0] Revision workflow started for run ${revisionRequest.run_id}`);
 
     // Return 202 Accepted - workflow runs asynchronously
     return successResponse(
       {
         ok: true,
         run_id: revisionRequest.run_id,
-        status: 'revision_completed',
+        status: 'revision_queued',
         message: 'Revision workflow queued',
       },
       202
