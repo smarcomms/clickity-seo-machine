@@ -1,9 +1,12 @@
 'use workflow';
 
-import { getRun, updateRevisionAndDraft } from '../storage/runs';
 import { sendCallbackStep } from './steps/callback-step';
 import { runRevisionStep } from './steps/revision-step';
-import { query } from '../storage/db';
+import {
+  getRunForRevisionStep,
+  updateRevisionAndDraftStep,
+  updateBatchRevisionPendingStep,
+} from './steps/revision-helpers';
 
 /**
  * Revision Request Data Structure
@@ -51,7 +54,7 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
 
     // Fetch the existing run
     console.log(`[v0] Revision Workflow: Fetching run ${request.run_id}`);
-    const run = await getRun(request.run_id);
+    const run = await getRunForRevisionStep(request.run_id);
 
     if (!run) {
       throw new Error(`Run not found: ${request.run_id}`);
@@ -77,10 +80,11 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
     // 4. run.draft_markdown
     const finalOutput = run.final_output_json as Record<string, any>;
     let currentDraft =
-      request.current_draft_markdown ||
-      finalOutput.edited_draft_markdown ||
-      finalOutput.draft_markdown ||
-      (run as Record<string, any>).draft_markdown;
+    request.current_draft_markdown ||
+    (run as Record<string, any>).revised_markdown ||
+    finalOutput.edited_draft_markdown ||
+    finalOutput.draft_markdown ||
+    (run as Record<string, any>).draft_markdown;
 
     if (!currentDraft || typeof currentDraft !== 'string') {
       throw new Error(
@@ -204,7 +208,7 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
     );
 
     // Save revision to database (updates both revised_markdown and final_output_json.edited_draft_markdown)
-    await updateRevisionAndDraft(
+    await updateRevisionAndDraftStep(
       request.run_id,
       revisionOutput.revised_markdown,
       internalReviewMetadata
@@ -217,26 +221,20 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
     // Update smc_content_batches status if batch_id exists
     const batchId = run.smc_content_batch_id || request.smc_content_batch_id;
     if (batchId) {
-      try {
-        console.log(
-          `[v0] Revision Workflow: Updating smc_content_batches status for batch ${batchId}`
-        );
+      console.log(
+        `[v0] Revision Workflow: Updating smc_content_batches status for batch ${batchId}`
+      );
 
-        await query(
-          `UPDATE smc_content_batches SET status = $1, updated_at = NOW() WHERE id = $2`,
-          ['blog_revised_review_pending', batchId]
-        );
+      const batchUpdate = await updateBatchRevisionPendingStep(batchId);
 
+      if (!batchUpdate.ok) {
+        console.error(
+          `[v0] Revision Workflow: Failed to update smc_content_batches: ${batchUpdate.error}. Revision is preserved - proceeding with callback.`
+        );
+      } else if (!batchUpdate.skipped) {
         console.log(
           `[v0] Revision Workflow: smc_content_batches status updated`
         );
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error(
-          `[v0] Revision Workflow: Failed to update smc_content_batches: ${errorMessage}. Revision is preserved - proceeding with callback.`
-        );
-        // Do NOT rethrow - revision is already saved
       }
     }
 
