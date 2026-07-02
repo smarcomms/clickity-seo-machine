@@ -80,10 +80,11 @@ export async function revisionWorkflow(request: RevisionRequest): Promise<void> 
     // 4. run.draft_markdown
     const finalOutput = run.final_output_json as Record<string, any>;
     let currentDraft =
-      request.current_draft_markdown ||
-      finalOutput.edited_draft_markdown ||
-      finalOutput.draft_markdown ||
-      (run as Record<string, any>).draft_markdown;
+    request.current_draft_markdown ||
+    (run as Record<string, any>).revised_markdown ||
+    finalOutput.edited_draft_markdown ||
+    finalOutput.draft_markdown ||
+    (run as Record<string, any>).draft_markdown;
 
     if (!currentDraft || typeof currentDraft !== 'string') {
       throw new Error(
