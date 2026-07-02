@@ -2,6 +2,13 @@ import { query } from './db';
 import { SeoBlogRun, RunStatus } from '../schemas/seo-blog-output';
 import { SeoBlogInput } from '../schemas/seo-blog-input';
 
+// Extend SeoBlogRun interface to include revised_markdown (not in base schema yet)
+declare module '../schemas/seo-blog-output' {
+  interface SeoBlogRun {
+    revised_markdown?: string | null;
+  }
+}
+
 /**
  * Create a new SEO blog run
  */
@@ -184,6 +191,53 @@ export async function recordCallbackAttempt(
 }
 
 /**
+ * Update revision and draft for a completed run
+ * Atomically updates both revised_markdown and final_output_json.edited_draft_markdown
+ */
+export async function updateRevisionAndDraft(
+  runId: string,
+  revisedMarkdown: string,
+  internalReviewMetadata: Record<string, unknown>
+): Promise<SeoBlogRun> {
+  // Fetch existing run
+  const run = await getRun(runId);
+  if (!run) {
+    throw new Error(`Run not found: ${runId}`);
+  }
+
+  if (!run.final_output_json) {
+    throw new Error(
+      `Run has no final_output_json. Cannot update revision. Run ID: ${runId}`
+    );
+  }
+
+  // Prepare updated final_output_json with merged internal_review
+  const updatedFinalOutput = {
+    ...run.final_output_json,
+    edited_draft_markdown: revisedMarkdown,
+    internal_review: {
+      ...(run.final_output_json.internal_review || {}),
+      ...internalReviewMetadata,
+    },
+  };
+
+  // Atomically update both columns
+  const result = await query(
+    `UPDATE seo_blog_runs 
+    SET final_output_json = $2, revised_markdown = $3, updated_at = NOW()
+    WHERE id = $1
+    RETURNING *`,
+    [runId, JSON.stringify(updatedFinalOutput), revisedMarkdown]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error(`Failed to update run: ${runId}`);
+  }
+
+  return parseRunRow(result.rows[0]);
+}
+
+/**
  * Parse database row to SeoBlogRun type
  */
 export function parseRunRow(row: any): SeoBlogRun {
@@ -196,6 +250,7 @@ export function parseRunRow(row: any): SeoBlogRun {
     draft_markdown: row.draft_markdown,
     optimized_json: row.optimized_json,
     final_output_json: row.final_output_json,
+    revised_markdown: row.revised_markdown ?? null,
     smc_content_batch_id: row.smc_content_batch_id,
     error_message: row.error_message,
     callback_url: row.callback_url,
