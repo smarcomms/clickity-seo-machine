@@ -4,7 +4,6 @@ import 'server-only';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { getAgentConfig } from '../../storage/agent-configs';
-import { buildFullInputContext } from './context-builder';
 import type { SeoBlogInput } from '../../schemas/seo-blog-input';
 import type { ResearchOutput } from './research-step';
 import type { OutlineOutput } from './outline-step';
@@ -16,6 +15,96 @@ export interface RevisionOutput {
   revision_mode: 'moderate_revision' | 'heavy_revision';
   feedback_applied: string;
   timestamp: string;
+}
+
+/**
+ * Helper: Format a value for revision context output
+ */
+function formatRevisionValue(value: unknown, fallback = 'Not provided'): string {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
+/**
+ * Helper: Format a list of values for revision context output
+ */
+function formatRevisionList(values: unknown, fallback = 'None provided'): string {
+  if (!Array.isArray(values) || values.length === 0) return fallback;
+
+  const cleaned = values
+    .map((item) => (typeof item === 'string' ? item.trim() : String(item)))
+    .filter(Boolean);
+
+  if (cleaned.length === 0) return fallback;
+  return cleaned.map((item) => `- ${item}`).join('\n');
+}
+
+/**
+ * Helper: Format a JSON object for revision context output
+ */
+function formatRevisionJson(value: unknown, fallback = 'None provided'): string {
+  if (!value || typeof value !== 'object') return fallback;
+  return JSON.stringify(value, null, 2);
+}
+
+/**
+ * Build lean revision context (limited to essential fields only)
+ * Does NOT include full research, outline, meta, or blog context brief
+ * to keep the Revision Agent focused on applying feedback, not re-planning
+ */
+function buildLeanRevisionContext(input: SeoBlogInput): string {
+  const brief: NonNullable<SeoBlogInput['blog_context_brief']> =
+    input.blog_context_brief ?? {};
+
+  const briefRecord = brief as Record<string, unknown>;
+
+  const mustInclude =
+    Array.isArray(brief.must_include) && brief.must_include.length > 0
+      ? brief.must_include
+      : input.must_include;
+
+  const mustAvoid =
+    Array.isArray(brief.must_avoid) && brief.must_avoid.length > 0
+      ? brief.must_avoid
+      : input.must_avoid;
+
+  const brandVoice =
+    brief.brand_voice_notes ||
+    input.brand_voice_notes ||
+    input.tone;
+
+  const orderContext =
+    input.order_context ||
+    briefRecord.order_context ||
+    {};
+
+  return `## Limited Revision Context
+
+Use this context only to support the requested revision.
+Do not restart, re-plan, or regenerate the article from this context.
+
+Business Name: ${formatRevisionValue(input.business_name)}
+Client Name: ${formatRevisionValue(input.client_name)}
+Website URL: ${formatRevisionValue(input.website_url)}
+Blog Topic: ${formatRevisionValue(input.blog_topic || input.topic)}
+Primary Keyword: ${formatRevisionValue(input.primary_keyword)}
+Secondary Keywords:
+${formatRevisionList(input.secondary_keywords || input.keywords)}
+Target Word Count: ${formatRevisionValue(input.target_word_count)}
+Brand Voice Notes: ${formatRevisionValue(brandVoice)}
+Audience Notes: ${formatRevisionValue(input.audience_notes)}
+CTA Notes: ${formatRevisionValue(input.cta_notes || input.cta)}
+Additional Order Notes: ${formatRevisionValue(input.additional_order_notes)}
+
+Must Include:
+${formatRevisionList(mustInclude)}
+
+Must Avoid:
+${formatRevisionList(mustAvoid)}
+
+Original Order Context:
+${formatRevisionJson(orderContext)}`;
 }
 
 /**
@@ -59,58 +148,28 @@ export async function runRevisionStep(
     // Build revision instruction based on mode
     const revisionInstruction =
       revisionMode === 'heavy_revision'
-        ? 'Apply comprehensive changes. Restructure sections if needed. Rewrite paragraphs for clarity and SEO. Be thorough.'
-        : 'Apply focused changes. Polish existing structure. Refine wording and clarity. Keep sections intact.';
+        ? 'Apply comprehensive changes requested by the feedback. You may restructure sections if needed, but keep the same core topic, primary keyword, and publishing intent unless the feedback explicitly asks for a new direction. Preserve the existing H1/title unless the reviewer explicitly asks to change it. Do not invent new facts.'
+        : 'Apply focused changes requested by the feedback. Polish the existing structure, refine wording, and keep sections and the existing H1/title intact where possible.';
 
-    // Build context with full Blog Context Brief if input is available
-    let contextBlock = '';
-    if (input) {
-      contextBlock = `\n\n${buildFullInputContext(input)}`;
+    // Build lean revision context (essential fields only, no full research/outline/meta)
+    const contextBlock = input ? `\n\n${buildLeanRevisionContext(input)}` : '';
+
+    // For V1, do not include full research, outline, seoQa, or meta context
+    // to keep the agent focused on applying feedback, not re-planning
+    void research;
+    void outline;
+    void seoQa;
+    void meta;
+
+    const additionalContext: string[] = [];
+
+    // Validate inputs
+    if (!currentDraft || !currentDraft.trim()) {
+      throw new Error('Revision step missing currentDraft');
     }
 
-    // Add additional context from other agents if available
-    let additionalContext: string[] = [];
-
-    if (research) {
-      const findings = (research as Record<string, any>).key_findings || [];
-      if (Array.isArray(findings) && findings.length > 0) {
-        additionalContext.push(
-          `\n\nPrevious Research Findings:\n${findings
-            .map((f: any) => `- ${typeof f === 'string' ? f : JSON.stringify(f)}`)
-            .join('\n')}`
-        );
-      }
-    }
-
-    if (outline) {
-      const sections = ((outline as Record<string, any>).sections || []).map(
-        (s: any) =>
-          `## ${typeof s === 'string' ? s : s.heading || 'Section'}`
-      );
-      if (sections.length > 0) {
-        additionalContext.push(
-          `\n\nOriginal Outline Structure:\n${sections.join('\n')}`
-        );
-      }
-    }
-
-    if (seoQa) {
-      const seoQaObj = seoQa as Record<string, any>;
-      additionalContext.push(
-        `\n\nSEO QA Results:\nOverall Score: ${seoQaObj.overall_score || 'N/A'}/100`
-      );
-      if (seoQaObj.priority_fixes && Array.isArray(seoQaObj.priority_fixes)) {
-        additionalContext.push(
-          `Priority Fixes: ${seoQaObj.priority_fixes.join('; ')}`
-        );
-      }
-    }
-
-    if (meta) {
-      const metaObj = meta as Record<string, any>;
-      additionalContext.push(
-        `\n\nMeta Information:\nMeta Title: ${metaObj.meta_title || 'N/A'}\nMeta Description: ${metaObj.meta_description || 'N/A'}`
-      );
+    if (!reviewerFeedback || !reviewerFeedback.trim()) {
+      throw new Error('Revision step missing reviewerFeedback');
     }
 
     // Build user message
@@ -118,6 +177,9 @@ export async function runRevisionStep(
 
 Revision Mode: ${revisionMode}
 ${revisionInstruction}
+
+Publishing Note:
+This revision does not regenerate meta title, slug, or social preview. Preserve the same core topic, primary keyword, article angle, and H1/title unless reviewer feedback explicitly asks to change them.
 
 Reviewer Feedback:
 ${reviewerFeedback}${contextBlock}${additionalContext.join('')}
